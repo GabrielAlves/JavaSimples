@@ -1,0 +1,6 @@
+media (float n1, float n2, int n3) : float
+var:
+m : float;
+m = (n1+n2+n3)/3;
+return m;
+end
