@@ -1,0 +1,4 @@
+soma= 10   +            20+30;
+nome = "joao" + "da silva";
+saldo=10.2;
+temCovid =true;

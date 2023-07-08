@@ -1,0 +1,9 @@
+while (i < 10) :
+    print(i);
+    i = i + i;
+end
+while (i < 10) :
+    if (a + i > 100) :
+        break;
+    end
+end

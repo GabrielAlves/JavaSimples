@@ -1,0 +1,10 @@
+if (a < b):
+    print(a, " eh maior do que ", b);
+    print("");
+else :
+    print(b, " eh maior ou igual a ", a);
+    scanf(c);
+end
+if (PI == 3.14) :
+    print("o valor de pi esta correto");
+end
