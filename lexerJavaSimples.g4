@@ -1,14 +1,18 @@
 lexer grammar lexerJavaSimples;
 
 // DADO: VALOR | IDENTIFICADOR;
-VALOR: VALOR_INT
+/*VALOR: VALOR_INT
      | VALOR_FLOAT
      | VALOR_STR
-     | VALOR_BOOL;
+     | VALOR_BOOL;*/
 
 VALOR_INT : [0-9]+;
 VALOR_FLOAT : [0-9]+ '.' [0-9]+;
-VALOR_STR : '"' [a-zA-Z0-9_ ]* '"';
+VALOR_STR : '"' ( ~[\\\r\n\f"] )* '"'
+          | '“' ( ~[\\\r\n\f"] )* '”'
+          | '\'' ( ~[\\\r\n\f"] )* '\'';
+// ( ~[\\\r\n\f"] )* significa qualquer char, exceto  "\", "\r", "\n", "\f" e """.
+
 VALOR_BOOL : 'true'
            | 'false';
 
@@ -37,4 +41,7 @@ TIPO : 'int'
      | 'bool';
 
 IDENTIFICADOR : [a-zA-Z][a-zA-Z0-9_]*;
+
+COMENTARIO_BLOCO: '/*' .*? '*/' -> skip;
+COMENTARIO_LINHA : '//' ~[\r\n]* -> skip;
 WS : [ \t\r\n] -> skip;
