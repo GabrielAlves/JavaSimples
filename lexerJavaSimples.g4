@@ -1,11 +1,6 @@
 lexer grammar lexerJavaSimples;
 
-// DADO: VALOR | IDENTIFICADOR;
-/*VALOR: VALOR_INT
-     | VALOR_FLOAT
-     | VALOR_STR
-     | VALOR_BOOL;*/
-
+/* Regras léxicas */
 VALOR_INT : [0-9]+;
 VALOR_FLOAT : [0-9]+ '.' [0-9]+;
 VALOR_STR : '"' ( ~[\\\r\n\f"] )* '"'
@@ -16,17 +11,13 @@ VALOR_STR : '"' ( ~[\\\r\n\f"] )* '"'
 VALOR_BOOL : 'true'
            | 'false';
 
-OPERADOR_UNARIO: '!'
-               | '-';
-
-//OPERADOR_BINARIO: OPERADOR_ARITMETICO | OPERADOR_RELACIONAL;
-OPERADOR_ARITMETICO: '*'
-                   | '/'
-                   | '+'
+OPERADOR_ARIT_LVL_1: '+'
                    | '-';
+OPERADOR_ARIT_LVL_2: '*'
+                   | '/';
 
-OPERADOR_RELACIONAL: '=='
-                   | '!='
+OPERADOR_RELACIONAL_LVL_2: '==';
+OPERADOR_RELACIONAL_LVL_1: '!='
                    | '>='
                    | '<='
                    | '>'
@@ -34,6 +25,9 @@ OPERADOR_RELACIONAL: '=='
 
 OPERADOR_LOGICO: '&&'
                | '||';
+
+OPERADOR_UNARIO: '!'
+               | '-';
 
 TIPO : 'int'
      | 'str'
