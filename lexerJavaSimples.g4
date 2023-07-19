@@ -16,9 +16,9 @@ OPERADOR_ARIT_LVL_1: '+'
 OPERADOR_ARIT_LVL_2: '*'
                    | '/';
 
-OPERADOR_RELACIONAL_LVL_2: '==';
-OPERADOR_RELACIONAL_LVL_1: '!='
-                   | '>='
+OPERADOR_RELACIONAL_LVL_2: '=='
+                   |   '!=';
+OPERADOR_RELACIONAL_LVL_1: '>='
                    | '<='
                    | '>'
                    | '<';
@@ -26,8 +26,8 @@ OPERADOR_RELACIONAL_LVL_1: '!='
 OPERADOR_LOGICO: '&&'
                | '||';
 
-OPERADOR_UNARIO: '!'
-               | '-';
+OPERADOR_UNARIO_ARIT: '-';
+OPERADOR_UNARIO_RELACIONAL: '!';
 
 TIPO : 'int'
      | 'str'
