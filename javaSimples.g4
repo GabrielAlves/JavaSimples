@@ -18,26 +18,23 @@ decl_de_variaveis: 'var' ':' ((decl_de_var | decl_de_var_const) ';')+;
 decl_de_var: lista_de_var ':' TIPO;
 decl_de_var_const: 'const' lista_de_atribuicao;
 
-/* Regras auxiliares */
+/* Regras de listas */
 lista_de_var : IDENTIFICADOR (',' IDENTIFICADOR)*;
 lista_de_atribuicao : IDENTIFICADOR '=' expressao (',' IDENTIFICADOR '=' expressao)*;
-lista_expressao: expressao (',' expressao)*;
-//lista_expr_aritmetica: expr_aritimetica (',' expr_aritimetica)*;
-//lista_expr_relacional: expr_relacional (',' expr_relacional)*;
+lista_de_expressoes: expressao (',' expressao)*;
 
-expressao: expr_aritimetica | expr_relacional;
-
-expr_aritimetica: chamada_funcao
-    | expr_aritimetica OPERADOR_ARIT_LVL_2 expr_aritimetica
+/* Regras de expressões */
+expressao: expr_aritimetica | expr_relacional | VALOR_STR | chamada_funcao;
+/* Expressões Aritimeticas  */
+expr_aritimetica: expr_aritimetica OPERADOR_ARIT_LVL_2 expr_aritimetica
     | expr_aritimetica OPERADOR_ARIT_LVL_1 expr_aritimetica
     | termo_aritimetico;
 termo_aritimetico: OPERADOR_UNARIO_ARIT termo_aritimetico
     | IDENTIFICADOR
-    | (VALOR_INT | VALOR_FLOAT | VALOR_STR)
+    | (VALOR_INT | VALOR_FLOAT)
     | '(' expr_aritimetica ')';
-
-expr_relacional: chamada_funcao
-    | termo_relacional OPERADOR_RELACIONAL_LVL_2 termo_relacional
+/* Expressões Booleanas */
+expr_relacional: termo_relacional OPERADOR_RELACIONAL_LVL_2 termo_relacional
     | termo_relacional OPERADOR_RELACIONAL_LVL_1 termo_relacional;
 termo_relacional: OPERADOR_UNARIO_RELACIONAL expr_relacional
     | IDENTIFICADOR
@@ -58,7 +55,7 @@ comando_if: 'if' '(' expr_relacional ')' ':' comando* ('else' ':' comando*)? 'en
 comando_while: 'while' '(' expr_relacional ')' ':' (comando)+ 'end';
 comando_scanf: 'scanf' '(' lista_de_var ')' ';';
 comando_atrib : IDENTIFICADOR '=' expressao ';';
-comando_print: 'print' '(' lista_expressao ')' ';';
+comando_print: 'print' '(' lista_de_expressoes ')' ';';
 comando_break: 'break' ';';
 comando_return: 'return' expressao ';';
-chamada_funcao: IDENTIFICADOR '(' (lista_de_var | expressao)? ')';
+chamada_funcao: IDENTIFICADOR '(' (lista_de_var | lista_de_expressoes)? ')';
