@@ -2,10 +2,10 @@ main:
 var:
 numero : int;
 n1, n2 : int;
-print (“Programa Fatorial. Digite o valor?”);
+print ("Programa Fatorial. Digite o valor?");
 scanf(numero);
 print(fatorial(numero));
-print (“Programa Media. Digite o valores?”);
+print ("Programa Media. Digite o valores?");
 scanf(n1, n2);
 print(mostrarMedia(n1, n2));
 end

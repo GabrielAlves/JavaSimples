@@ -8,6 +8,7 @@ class MyVisitor(javaSimplesVisitor):
     def __init__(self, output_file):
         self.output_file = output_file
         self.jasmin_code = ""
+        self.variablesTable = {}
 
     def save_jasmin_code(self):
         with open(self.output_file, "w") as file:
@@ -43,7 +44,7 @@ class MyVisitor(javaSimplesVisitor):
     #################################################################
     ######                     Daniel                          ######
     #################################################################
-    # Visit a parse tree produced by javaSimplesParser#decl_de_variaveis.
+    # Vendo todas as declarações de variaveis e constantes do codigo
     def visitDecl_de_variaveis(self, ctx: javaSimplesParser.Decl_de_variaveisContext):
         self.jasmin_code += "; Declaracao variaveis\n"
 
@@ -52,15 +53,24 @@ class MyVisitor(javaSimplesVisitor):
         for decl_de_var_const in ctx.decl_de_var_const():
             self.visitDecl_de_var_const(decl_de_var_const)
 
+        jasmin_instruction = f""
+
     # Visit a parse tree produced by javaSimplesParser#decl_de_var.
     def visitDecl_de_var(self, ctx: javaSimplesParser.Decl_de_varContext):
         self.jasmin_code += "; Declaracao de variavel\n"
+        variable_names = ctx.lista_de_var().IDENTIFICADOR()
+        data_type = ctx.TIPO().getText()
+
+        for variable_name in variable_names:
+            self.variablesTable[len(self.variablesTable)] = (variable_name, data_type)
         return self.visitChildren(ctx)
 
     # Visit a parse tree produced by javaSimplesParser#decl_de_var_const.
     def visitDecl_de_var_const(self, ctx: javaSimplesParser.Decl_de_var_constContext):
         self.jasmin_code += "; declaracao de constantes\n"
-        return self.visitChildren(ctx)
+
+        for atribuicao in ctx.lista_de_atribuicao():
+            self.visitLista_de_atribuicao(atribuicao)
 
     # Visit a parse tree produced by javaSimplesParser#lista_de_var.
     def visitLista_de_var(self, ctx: javaSimplesParser.Lista_de_varContext):
@@ -69,8 +79,10 @@ class MyVisitor(javaSimplesVisitor):
 
     # Visit a parse tree produced by javaSimplesParser#lista_de_atribuicao.
     def visitLista_de_atribuicao(self, ctx: javaSimplesParser.Lista_de_atribuicaoContext):
-        self.jasmin_code += "; atribuicao\n"
-        return self.visitChildren(ctx)
+        self.jasmin_code += "; lista de atribuicao\n"
+        variable_name = ctx.IDENTIFICADOR()
+        expressao = self.visitExpressao(ctx.expressao())
+        self.variablesTable[variable_name] = expressao
 
     # Visit a parse tree produced by javaSimplesParser#lista_de_expressoes.
     def visitLista_de_expressoes(self, ctx: javaSimplesParser.Lista_de_expressoesContext):
@@ -80,20 +92,38 @@ class MyVisitor(javaSimplesVisitor):
     # Visit a parse tree produced by javaSimplesParser#expressao.
     def visitExpressao(self, ctx: javaSimplesParser.ExpressaoContext):
         self.jasmin_code += "; Expressao\n"
+        expressao = None
         if ctx.expr_aritimetica():
-            self.visitExpr_aritimetica(ctx.expr_aritimetica())
+            expressao = self.visitExpr_aritimetica(ctx.expr_aritimetica())
         elif ctx.expr_relacional():
-            self.visitExpr_relacional(ctx.expr_relacional())
+            expressao = self.visitExpr_relacional(ctx.expr_relacional())
         elif ctx.VALOR_STR():
-            valor_string = ctx.VALOR_STR().getText()
-            self.jasmin_code += f'ldc "{valor_string}"\n'
+            expressao = ctx.VALOR_STR().getText()
         elif ctx.chamada_funcao():
-            self.visitChamada_funcao(ctx.chamada_funcao())
+            expressao = self.visitChamada_funcao(ctx.chamada_funcao())
+        return expressao
 
     # Visit a parse tree produced by javaSimplesParser#expr_aritimetica.
     def visitExpr_aritimetica(self, ctx: javaSimplesParser.Expr_aritimeticaContext):
         self.jasmin_code += "; expressao aritimetica\n"
-        return self.visitChildren(ctx)
+        if ctx.OPERADOR_ARIT_LVL_2() is not None:
+            operador = ctx.OPERADOR_ARIT_LVL_2()
+            operando_esq = 1
+            operando_dir = 0
+            if operador == "*":
+                return operando_esq * operando_dir
+            else:
+                return operando_esq / operando_dir
+        elif ctx.OPERADOR_ARIT_LVL_1() is not None:
+            operador = ctx.OPERADOR_ARIT_LVL_1()
+            operando_esq = 1
+            operando_dir = 0
+            if operador == "+":
+                return operando_esq + operando_dir
+            else:
+                return operando_esq - operando_dir
+        else:
+            return self.visitTermo_aritimetico(ctx.termo_aritimetico())
 
     # Visit a parse tree produced by javaSimplesParser#termo_aritimetico.
     def visitTermo_aritimetico(self, ctx: javaSimplesParser.Termo_aritimeticoContext):
@@ -150,24 +180,24 @@ class MyVisitor(javaSimplesVisitor):
         return self.visitChildren(ctx)
 
 
-def main():
-    input_stream = InputStream("3 + 4 - 2")
-
-    # lexer vai receber o comando
-    # lexer = javaSimplesLexer(input_stream)
-    # separa em tokens
-    # tokens = CommonTokenStream(lexer)
-    # cria um parser com os tokens
-    # parser = javaSimplesParser(tokens)
-
-    # cria uma arvore
-    # tree = parser.start()
-    visitor = MyVisitor("programa.j")
-    # analisa o codigo
-    # jasmin_code = visitor.visit(tree)
-
-    # print(jasmin_code)
-
-
 if __name__ == '__main__':
-    main()
+    # Ler o arquivo de entrada
+    input_stream = FileStream('input.txt')
+
+    # Criar o lexer
+    lexer = javaSimplesLexer(input_stream)
+
+    # Criar o stream de tokens
+    token_stream = CommonTokenStream(lexer)
+
+    # Criar o parser
+    parser = javaSimplesParser(token_stream)
+
+    # Obter a árvore de análise sintática
+    tree = parser.programa()
+
+    # Criar o visitor
+    visitor = MyVisitor("Output.j")
+
+    # Visitar a árvore de análise sintática
+    visitor.visit(tree)
