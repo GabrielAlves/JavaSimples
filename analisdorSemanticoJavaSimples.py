@@ -1,9 +1,18 @@
 from antlr4 import *
 from gen.javaSimplesLexer import javaSimplesLexer
 from gen.javaSimplesParser import *
+from gen.javaSimplesVisitor import javaSimplesVisitor
 
 
-class JavaSimplesVisitor(ParseTreeVisitor):
+class MyVisitor(javaSimplesVisitor):
+    def __init__(self, output_file):
+        self.output_file = output_file
+        self.jasmin_code = ""
+
+    def save_jasmin_code(self):
+        with open(self.output_file, "w") as file:
+            file.write(self.jasmin_code)
+
     #################################################################
     ######                     Ingrid                          ######
     #################################################################
@@ -36,46 +45,69 @@ class JavaSimplesVisitor(ParseTreeVisitor):
     #################################################################
     # Visit a parse tree produced by javaSimplesParser#decl_de_variaveis.
     def visitDecl_de_variaveis(self, ctx: javaSimplesParser.Decl_de_variaveisContext):
-        return self.visitChildren(ctx)
+        self.jasmin_code += "; Declaracao variaveis\n"
+
+        for decl_de_var in ctx.decl_de_var():
+            self.visitDecl_de_var(decl_de_var)
+        for decl_de_var_const in ctx.decl_de_var_const():
+            self.visitDecl_de_var_const(decl_de_var_const)
 
     # Visit a parse tree produced by javaSimplesParser#decl_de_var.
     def visitDecl_de_var(self, ctx: javaSimplesParser.Decl_de_varContext):
+        self.jasmin_code += "; Declaracao de variavel\n"
         return self.visitChildren(ctx)
 
     # Visit a parse tree produced by javaSimplesParser#decl_de_var_const.
     def visitDecl_de_var_const(self, ctx: javaSimplesParser.Decl_de_var_constContext):
+        self.jasmin_code += "; declaracao de constantes\n"
         return self.visitChildren(ctx)
 
     # Visit a parse tree produced by javaSimplesParser#lista_de_var.
     def visitLista_de_var(self, ctx: javaSimplesParser.Lista_de_varContext):
+        self.jasmin_code += "; lista de variaveis\n"
         return self.visitChildren(ctx)
 
     # Visit a parse tree produced by javaSimplesParser#lista_de_atribuicao.
     def visitLista_de_atribuicao(self, ctx: javaSimplesParser.Lista_de_atribuicaoContext):
+        self.jasmin_code += "; atribuicao\n"
         return self.visitChildren(ctx)
 
     # Visit a parse tree produced by javaSimplesParser#lista_de_expressoes.
     def visitLista_de_expressoes(self, ctx: javaSimplesParser.Lista_de_expressoesContext):
+        self.jasmin_code += "; lista de expressoes\n"
         return self.visitChildren(ctx)
 
     # Visit a parse tree produced by javaSimplesParser#expressao.
     def visitExpressao(self, ctx: javaSimplesParser.ExpressaoContext):
-        return self.visitChildren(ctx)
+        self.jasmin_code += "; Expressao\n"
+        if ctx.expr_aritimetica():
+            self.visitExpr_aritimetica(ctx.expr_aritimetica())
+        elif ctx.expr_relacional():
+            self.visitExpr_relacional(ctx.expr_relacional())
+        elif ctx.VALOR_STR():
+            valor_string = ctx.VALOR_STR().getText()
+            self.jasmin_code += f'ldc "{valor_string}"\n'
+        elif ctx.chamada_funcao():
+            self.visitChamada_funcao(ctx.chamada_funcao())
 
     # Visit a parse tree produced by javaSimplesParser#expr_aritimetica.
     def visitExpr_aritimetica(self, ctx: javaSimplesParser.Expr_aritimeticaContext):
+        self.jasmin_code += "; expressao aritimetica\n"
         return self.visitChildren(ctx)
 
     # Visit a parse tree produced by javaSimplesParser#termo_aritimetico.
     def visitTermo_aritimetico(self, ctx: javaSimplesParser.Termo_aritimeticoContext):
+        self.jasmin_code += "; termo aritimetico\n"
         return self.visitChildren(ctx)
 
     # Visit a parse tree produced by javaSimplesParser#expr_relacional.
     def visitExpr_relacional(self, ctx: javaSimplesParser.Expr_relacionalContext):
+        self.jasmin_code += "; expressao relacional\n"
         return self.visitChildren(ctx)
 
     # Visit a parse tree produced by javaSimplesParser#termo_relacional.
     def visitTermo_relacional(self, ctx: javaSimplesParser.Termo_relacionalContext):
+        self.jasmin_code += "; termo relacional\n"
         return self.visitChildren(ctx)
 
     #################################################################
@@ -130,7 +162,7 @@ def main():
 
     # cria uma arvore
     # tree = parser.start()
-    visitor = JavaSimplesVisitor()
+    visitor = MyVisitor("programa.j")
     # analisa o codigo
     # jasmin_code = visitor.visit(tree)
 
