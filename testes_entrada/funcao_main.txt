@@ -2,6 +2,7 @@ main:
 var:
 numero : int;
 n1, n2 : int;
+n1 = 2 + 2;
 print ("Programa Fatorial. Digite o valor?");
 scanf(numero);
 print(fatorial(numero));

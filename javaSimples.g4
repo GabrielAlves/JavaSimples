@@ -5,22 +5,21 @@ import lexerJavaSimples;
 programa: dec_de_func* funcao_main;
 
 /* Regras da função main */
-funcao_main: 'main' ':' decl_de_variaveis? comando* 'end';
+funcao_main: 'main' ':' declaracoes? comando* 'end';
 
 /* Regras de funções */
-dec_de_func: cabecalho_de_func decl_de_variaveis? comando* 'end';
+dec_de_func: cabecalho_de_func declaracoes? comando* 'end';
 cabecalho_de_func: IDENTIFICADOR '(' lista_de_parametros ')' ':' (TIPO | 'void');
 lista_de_parametros : (parametro (',' parametro)*)?;
 parametro: TIPO IDENTIFICADOR;
 
 /* Regras de variáveis */
-decl_de_variaveis: 'var' ':' ((decl_de_var | decl_de_var_const) ';')+;
+declaracoes: 'var' ':' ((decl_de_var | decl_de_const) ';')+;
 decl_de_var: lista_de_var ':' TIPO;
-decl_de_var_const: 'const' lista_de_atribuicao;
+decl_de_const: 'const' IDENTIFICADOR '=' (VALOR_INT | VALOR_FLOAT | VALOR_STR | VALOR_BOOL) (',' IDENTIFICADOR '=' (VALOR_INT | VALOR_FLOAT | VALOR_STR | VALOR_BOOL))*;
 
 /* Regras de listas */
 lista_de_var : IDENTIFICADOR (',' IDENTIFICADOR)*;
-lista_de_atribuicao : IDENTIFICADOR '=' expressao (',' IDENTIFICADOR '=' expressao)*;
 lista_de_expressoes: expressao (',' expressao)*;
 
 /* Regras de expressões */
@@ -28,18 +27,17 @@ expressao: expr_aritimetica | expr_relacional | VALOR_STR | chamada_funcao;
 /* Expressões Aritimeticas  */
 expr_aritimetica: expr_aritimetica OPERADOR_ARIT_LVL_2 expr_aritimetica
     | expr_aritimetica OPERADOR_ARIT_LVL_1 expr_aritimetica
-    | termo_aritimetico;
-termo_aritimetico: OPERADOR_UNARIO_ARIT termo_aritimetico
-    | IDENTIFICADOR
+    | OPERADOR_UNARIO_ARIT? termo_aritimetico;
+termo_aritimetico:IDENTIFICADOR
     | (VALOR_INT | VALOR_FLOAT)
     | '(' expr_aritimetica ')';
 /* Expressões Booleanas */
-expr_relacional: termo_relacional OPERADOR_RELACIONAL_LVL_2 termo_relacional
-    | termo_relacional OPERADOR_RELACIONAL_LVL_1 termo_relacional;
-termo_relacional: OPERADOR_UNARIO_RELACIONAL expr_relacional
-    | IDENTIFICADOR
+expr_relacional: OPERADOR_UNARIO_RELACIONAL? termo_relacional OPERADOR_RELACIONAL_LVL_2 OPERADOR_UNARIO_RELACIONAL? termo_relacional
+    | OPERADOR_UNARIO_RELACIONAL? termo_relacional OPERADOR_RELACIONAL_LVL_1 OPERADOR_UNARIO_RELACIONAL? termo_relacional
+    | OPERADOR_UNARIO_RELACIONAL? termo_relacional;
+termo_relacional: IDENTIFICADOR
     | (VALOR_INT | VALOR_FLOAT | VALOR_BOOL)
-    | '(' expr_relacional ')';
+    | OPERADOR_UNARIO_RELACIONAL? '(' expr_relacional ')';
 
 /* Regras de comandos */
 comando: comando_if
