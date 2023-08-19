@@ -9,6 +9,7 @@ class MyVisitor(javaSimplesVisitor):
         self.output_file = output_file
         self.jasmin_code = ""
         self.variablesTable = {}
+        self.palavras_reservadas = javaSimplesLexer.literalNames # Variáveis não podem usar esses nomes
 
     def save_jasmin_code(self):
         with open(self.output_file, "w") as file:
@@ -255,38 +256,51 @@ class MyVisitor(javaSimplesVisitor):
     #################################################################
     # Visit a parse tree produced by javaSimplesParser#comando.
     def visitComando(self, ctx: javaSimplesParser.ComandoContext):
+
         return self.visitChildren(ctx)
 
     # Visit a parse tree produced by javaSimplesParser#comando_if.
     def visitComando_if(self, ctx: javaSimplesParser.Comando_ifContext):
+        self.jasmin_code += "; Comando if\n"
         return self.visitChildren(ctx)
 
     # Visit a parse tree produced by javaSimplesParser#comando_while.
     def visitComando_while(self, ctx: javaSimplesParser.Comando_whileContext):
+        self.jasmin_code += "; Comando while\n"
         return self.visitChildren(ctx)
 
     # Visit a parse tree produced by javaSimplesParser#comando_scanf.
     def visitComando_scanf(self, ctx: javaSimplesParser.Comando_scanfContext):
+        self.jasmin_code += "; Comando scanf\n"
         return self.visitChildren(ctx)
 
     # Visit a parse tree produced by javaSimplesParser#comando_atrib.
     def visitComando_atrib(self, ctx: javaSimplesParser.Comando_atribContext):
+        self.jasmin_code += "; Comando atrib\n"
         return self.visitChildren(ctx)
 
     # Visit a parse tree produced by javaSimplesParser#comando_print.
     def visitComando_print(self, ctx: javaSimplesParser.Comando_printContext):
+        # TODO: Verificar o identificador a ser impresso existe
+        self.jasmin_code += "; Comando print\n"
+        print(ctx.getText())
+        #teste = self.visit(ctx.lista_de_expressoes())
+        #print(teste)
         return self.visitChildren(ctx)
 
     # Visit a parse tree produced by javaSimplesParser#comando_break.
     def visitComando_break(self, ctx: javaSimplesParser.Comando_breakContext):
+        self.jasmin_code += "; Comando break\n"
         return self.visitChildren(ctx)
 
     # Visit a parse tree produced by javaSimplesParser#comando_return.
     def visitComando_return(self, ctx: javaSimplesParser.Comando_returnContext):
+        self.jasmin_code += "; Comando return\n"
         return self.visitChildren(ctx)
 
     # Visit a parse tree produced by javaSimplesParser#chamada_funcao.
     def visitChamada_funcao(self, ctx: javaSimplesParser.Chamada_funcaoContext):
+        self.jasmin_code += "; Comando funcao\n"
         return self.visitChildren(ctx)
 
 
