@@ -1,4 +1,4 @@
-# Generated from C:/Users/Gabriel/PycharmProjects/JavaSimples\javaSimples.g4 by ANTLR 4.12.0
+# Generated from C:/Users/Windows_PC/Desktop/Arquivos/Estudos/1 - UFPI/6º Periodo/Compiladores/Projeto_Final_Compiladores/JavaSimples\javaSimples.g4 by ANTLR 4.12.0
 from antlr4 import *
 if __name__ is not None and "." in __name__:
     from .javaSimplesParser import javaSimplesParser
@@ -62,12 +62,12 @@ class javaSimplesListener(ParseTreeListener):
         pass
 
 
-    # Enter a parse tree produced by javaSimplesParser#decl_de_variaveis.
-    def enterDecl_de_variaveis(self, ctx:javaSimplesParser.Decl_de_variaveisContext):
+    # Enter a parse tree produced by javaSimplesParser#declaracoes.
+    def enterDeclaracoes(self, ctx:javaSimplesParser.DeclaracoesContext):
         pass
 
-    # Exit a parse tree produced by javaSimplesParser#decl_de_variaveis.
-    def exitDecl_de_variaveis(self, ctx:javaSimplesParser.Decl_de_variaveisContext):
+    # Exit a parse tree produced by javaSimplesParser#declaracoes.
+    def exitDeclaracoes(self, ctx:javaSimplesParser.DeclaracoesContext):
         pass
 
 
@@ -80,12 +80,12 @@ class javaSimplesListener(ParseTreeListener):
         pass
 
 
-    # Enter a parse tree produced by javaSimplesParser#decl_de_var_const.
-    def enterDecl_de_var_const(self, ctx:javaSimplesParser.Decl_de_var_constContext):
+    # Enter a parse tree produced by javaSimplesParser#decl_de_const.
+    def enterDecl_de_const(self, ctx:javaSimplesParser.Decl_de_constContext):
         pass
 
-    # Exit a parse tree produced by javaSimplesParser#decl_de_var_const.
-    def exitDecl_de_var_const(self, ctx:javaSimplesParser.Decl_de_var_constContext):
+    # Exit a parse tree produced by javaSimplesParser#decl_de_const.
+    def exitDecl_de_const(self, ctx:javaSimplesParser.Decl_de_constContext):
         pass
 
 
@@ -95,15 +95,6 @@ class javaSimplesListener(ParseTreeListener):
 
     # Exit a parse tree produced by javaSimplesParser#lista_de_var.
     def exitLista_de_var(self, ctx:javaSimplesParser.Lista_de_varContext):
-        pass
-
-
-    # Enter a parse tree produced by javaSimplesParser#lista_de_atribuicao.
-    def enterLista_de_atribuicao(self, ctx:javaSimplesParser.Lista_de_atribuicaoContext):
-        pass
-
-    # Exit a parse tree produced by javaSimplesParser#lista_de_atribuicao.
-    def exitLista_de_atribuicao(self, ctx:javaSimplesParser.Lista_de_atribuicaoContext):
         pass
 
 

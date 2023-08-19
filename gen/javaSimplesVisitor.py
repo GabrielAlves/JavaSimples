@@ -1,4 +1,4 @@
-# Generated from C:/Users/Gabriel/PycharmProjects/JavaSimples\javaSimples.g4 by ANTLR 4.12.0
+# Generated from C:/Users/Windows_PC/Desktop/Arquivos/Estudos/1 - UFPI/6º Periodo/Compiladores/Projeto_Final_Compiladores/JavaSimples\javaSimples.g4 by ANTLR 4.12.0
 from antlr4 import *
 if __name__ is not None and "." in __name__:
     from .javaSimplesParser import javaSimplesParser
@@ -39,8 +39,8 @@ class javaSimplesVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by javaSimplesParser#decl_de_variaveis.
-    def visitDecl_de_variaveis(self, ctx:javaSimplesParser.Decl_de_variaveisContext):
+    # Visit a parse tree produced by javaSimplesParser#declaracoes.
+    def visitDeclaracoes(self, ctx:javaSimplesParser.DeclaracoesContext):
         return self.visitChildren(ctx)
 
 
@@ -49,18 +49,13 @@ class javaSimplesVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by javaSimplesParser#decl_de_var_const.
-    def visitDecl_de_var_const(self, ctx:javaSimplesParser.Decl_de_var_constContext):
+    # Visit a parse tree produced by javaSimplesParser#decl_de_const.
+    def visitDecl_de_const(self, ctx:javaSimplesParser.Decl_de_constContext):
         return self.visitChildren(ctx)
 
 
     # Visit a parse tree produced by javaSimplesParser#lista_de_var.
     def visitLista_de_var(self, ctx:javaSimplesParser.Lista_de_varContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by javaSimplesParser#lista_de_atribuicao.
-    def visitLista_de_atribuicao(self, ctx:javaSimplesParser.Lista_de_atribuicaoContext):
         return self.visitChildren(ctx)
 
 
