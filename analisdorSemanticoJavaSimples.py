@@ -9,6 +9,7 @@ class MyVisitor(javaSimplesVisitor):
         self.output_file = output_file
         self.jasmin_code = ""
         self.variablesTable = {}
+        self.stack = []
         self.palavras_reservadas = javaSimplesLexer.literalNames  # Variáveis não podem usar esses nomes
 
     def save_jasmin_code(self):
@@ -16,14 +17,20 @@ class MyVisitor(javaSimplesVisitor):
             file.write(self.jasmin_code)
 
     def carregaVariavel(self, identificador, tipo):
+        temp_jasmin_code = ""
         if tipo == "int":
-            self.jasmin_code += f"iload {identificador}\n"
+            temp_jasmin_code += f"iload {identificador}\n"
+            self.stack.append(len(self.stack))
         elif tipo == "float":
-            self.jasmin_code += f"fload {identificador}\n"
+            temp_jasmin_code += f"fload {identificador}\n"
+            self.stack.append(len(self.stack))
         elif tipo == "str":
-            self.jasmin_code += f"aload {identificador}"
+            temp_jasmin_code += f"aload {identificador}"
+            self.stack.append(len(self.stack))
         else:
-            self.jasmin_code += f"iload {identificador}"
+            temp_jasmin_code += f"iload {identificador}"
+            self.stack.append(len(self.stack))
+        return temp_jasmin_code
 
     #################################################################
     ######                     Ingrid                          ######
@@ -67,7 +74,8 @@ class MyVisitor(javaSimplesVisitor):
             self.visitDecl_de_const(declaracao)
 
         temp_jasmin_code += f"; fim das declaracoes\n"
-        # self.jasmin_code = temp_jasmin_code
+        ############################ Debug
+        self.jasmin_code = temp_jasmin_code
         return len(self.variablesTable), temp_jasmin_code
 
     # Visit a parse tree produced by javaSimplesParser#decl_de_var.
@@ -99,84 +107,109 @@ class MyVisitor(javaSimplesVisitor):
         print("Declarando Constantes...")
         constant_names = ctx.IDENTIFICADOR()
         constants = ctx.VALOR_INT()
-        for i in range(0, len(constant_names)):
-            self.variablesTable[constant_names[i].getText()] = constants[i]
-            print(f"\tCriando Constante-> {constant_names[i]} : {constants[i]}")
+        if constants:
+            for i in range(0, len(constant_names)):
+                self.variablesTable[constant_names[i].getText()] = constants[i].getText()
+                print(f"\tCriando Constante-> {constant_names[i]} : {constants[i].getText()}")
+        constants = ctx.VALOR_FLOAT()
+        if constants:
+            for i in range(0, len(constant_names)):
+                self.variablesTable[constant_names[i].getText()] = constants[i].getText()
+                print(f"\tCriando Constante-> {constant_names[i]} : {constants[i].getText()}")
+        constants = ctx.VALOR_STR()
+        if constants:
+            for i in range(0, len(constant_names)):
+                self.variablesTable[constant_names[i].getText()] = constants[i].getText()
+                print(f"\tCriando Constante-> {constant_names[i]} : {constants[i].getText()}")
+        constants = ctx.VALOR_BOOL()
+        if constants:
+            for i in range(0, len(constant_names)):
+                self.variablesTable[constant_names[i].getText()] = constants[i].getText()
+                print(f"\tCriando Constante-> {constant_names[i]} : {constants[i].getText()}")
 
     # Visit a parse tree produced by javaSimplesParser#expressao.
     def visitExpressao(self, ctx: javaSimplesParser.ExpressaoContext):
         print("realizando expressão...")
+        temp_jasmin_code = ""
         tipo_expressao = None
         if ctx.expr_aritimetica():
-            tipo_expressao = self.visitExpr_aritimetica(ctx.expr_aritimetica())
+            tipo_expressao, temp_jasmin_code = self.visitExpr_aritimetica(ctx.expr_aritimetica())
         elif ctx.expr_relacional():
-            tipo_expressao = self.visitExpr_relacional(ctx.expr_relacional())
+            tipo_expressao, temp_jasmin_code = self.visitExpr_relacional(ctx.expr_relacional())
         elif ctx.VALOR_STR():
             texto = ctx.VALOR_STR().getText()
-            self.jasmin_code += f'ldc "{texto}"\n'
-            tipo_expressao = (texto, "str")
+            temp_jasmin_code += f'ldc "{texto}"\n'
+            tipo_expressao = "str"
         elif ctx.chamada_funcao():
-            tipo_expressao = self.visitChamada_funcao(ctx.chamada_funcao())
-        return tipo_expressao
+            tipo_expressao, temp_jasmin_code = self.visitChamada_funcao(ctx.chamada_funcao())
+        self.jasmin_code += temp_jasmin_code
+        return tipo_expressao, temp_jasmin_code
 
     # Visit a parse tree produced by javaSimplesParser#expr_aritimetica.
     def visitExpr_aritimetica(self, ctx: javaSimplesParser.Expr_aritimeticaContext):
         print("realizando expressão aritimetica...")
+        temp_jasmin_code = ""
         if ctx.OPERADOR_ARIT_LVL_2() is not None:
             operador = ctx.OPERADOR_ARIT_LVL_2().getText()
             tipo_operando_esq = self.visitExpr_aritimetica(ctx.getChild(0))
             tipo_operando_dir = self.visitExpr_aritimetica(ctx.getChild(2))
             if operador == "*":
                 if tipo_operando_esq == "float" or tipo_operando_dir == "float":
-                    self.jasmin_code += "fmult\n"
-                    return "float"
+                    temp_jasmin_code += "fmult\n"
+                    return "float", temp_jasmin_code
                 else:
-                    self.jasmin_code += "imult\n"
-                    return "int"
+                    temp_jasmin_code += "imult\n"
+                    return "int", temp_jasmin_code
             else:
                 if tipo_operando_esq == "float" or tipo_operando_dir == "float":
-                    self.jasmin_code += "fdiv\n"
-                    return "float"
+                    temp_jasmin_code += "fdiv\n"
+                    return "float", temp_jasmin_code
                 else:
-                    self.jasmin_code += "idiv\n"
-                    return "int"
+                    temp_jasmin_code += "idiv\n"
+                    return "int", temp_jasmin_code
         elif ctx.OPERADOR_ARIT_LVL_1() is not None:
             operador = ctx.OPERADOR_ARIT_LVL_1().getText()
-            tipo_operando_esq = self.visitExpr_aritimetica(ctx.getChild(0))
-            tipo_operando_dir = self.visitExpr_aritimetica(ctx.getChild(2))
+            tipo_operando_esq, op_esq_jasmin_code = self.visitExpr_aritimetica(ctx.getChild(0))
+            tipo_operando_dir, op_dir_jasmin_code = self.visitExpr_aritimetica(ctx.getChild(2))
+
+            # Adicionando o codigo jasmin do carregamento de operadores para o temp_jasmin_code
+            temp_jasmin_code += op_esq_jasmin_code
+            temp_jasmin_code += op_dir_jasmin_code
+
             if operador == "+":
                 if tipo_operando_esq == "float" or tipo_operando_dir == "float":
-                    self.jasmin_code += "fadd\n"
-                    return "float"
+                    temp_jasmin_code += "fadd\n"
+                    return "float", temp_jasmin_code
                 else:
-                    self.jasmin_code += "iadd\n"
-                    return "int"
+                    temp_jasmin_code += "iadd\n"
+                    return "int", temp_jasmin_code
             else:
                 if tipo_operando_esq == "float" or tipo_operando_dir == "float":
-                    self.jasmin_code += "fsub\n"
-                    return "float"
+                    temp_jasmin_code += "fsub\n"
+                    return "float", temp_jasmin_code
                 else:
-                    self.jasmin_code += "isub\n"
-                    return "int"
+                    temp_jasmin_code += "isub\n"
+                    return "int", temp_jasmin_code
         else:
             return self.visitTermo_aritimetico(ctx.termo_aritimetico())
 
     # Visit a parse tree produced by javaSimplesParser#termo_aritimetico.
     def visitTermo_aritimetico(self, ctx: javaSimplesParser.Termo_aritimeticoContext):
         print("carregando valor...")
+        temp_jasmin_code = ""
         if ctx.IDENTIFICADOR() is not None:
             identificador = ctx.IDENTIFICADOR().getText()
             variavel, tipo = self.variablesTable[identificador]
-            self.carregaVariavel(variavel, tipo)
-            return tipo
+            temp_jasmin_code = self.carregaVariavel(variavel, tipo)
+            return tipo, temp_jasmin_code
         elif ctx.VALOR_INT() is not None:
             valor = ctx.VALOR_INT().getText()
-            self.jasmin_code += f"ldc {valor}\n"
-            return "int"
+            temp_jasmin_code += f"ldc {valor}\n"
+            return "int", temp_jasmin_code
         elif ctx.VALOR_FLOAT() is not None:
             valor = ctx.VALOR_FLOAT().getText()
-            self.jasmin_code += f"ldc {valor}\n"
-            return "float"
+            temp_jasmin_code += f"ldc {valor}\n"
+            return "float", temp_jasmin_code
         else:  # Jasmin to do
             expr = self.visitExpr_aritimetica(ctx.expr_aritimetica())
             return expr
@@ -184,75 +217,87 @@ class MyVisitor(javaSimplesVisitor):
     # Visit a parse tree produced by javaSimplesParser#expr_relacional.
     def visitExpr_relacional(self, ctx: javaSimplesParser.Expr_relacionalContext):
         print("realizando expressão relacional...")
+        temp_jasmin_code = ""
         if ctx.OPERADOR_RELACIONAL_LVL_2() is not None:
             operador = ctx.OPERADOR_RELACIONAL_LVL_2().getText()
             if ctx.getChild(0).getText() == "!":
-                self.visitTermo_relacional(ctx.getChild(1))
+                tipo, op_esq_jasmin_code = self.visitTermo_relacional(ctx.getChild(1))
                 if ctx.getChild(3).getText() == "!":
-                    self.visitTermo_relacional(ctx.getChild(4))
+                    tipo, op_dir_jasmin_code = self.visitTermo_relacional(ctx.getChild(4))
                 else:
-                    self.visitTermo_relacional(ctx.getChild(3))
+                    tipo, op_dir_jasmin_code = self.visitTermo_relacional(ctx.getChild(3))
             else:
-                self.visitTermo_relacional(ctx.getChild(0))
+                tipo, op_esq_jasmin_code = self.visitTermo_relacional(ctx.getChild(0))
                 if ctx.getChild(2).getText() == "!":
-                    self.visitTermo_relacional(ctx.getChild(3))
+                    tipo, op_dir_jasmin_code = self.visitTermo_relacional(ctx.getChild(3))
                 else:
-                    self.visitTermo_relacional(ctx.getChild(2))
+                    tipo, op_dir_jasmin_code = self.visitTermo_relacional(ctx.getChild(2))
+
+            temp_jasmin_code += op_esq_jasmin_code
+            temp_jasmin_code += op_dir_jasmin_code
 
             if operador == "==":
-                self.jasmin_code += f"if_icmpeq ;implementar labels\n"
+                temp_jasmin_code += f"if_icmpeq ;implementar labels\n"
             else:
-                self.jasmin_code += f"if_icmpne ;implementar labels\n"
+                temp_jasmin_code += f"if_icmpne ;implementar labels\n"
+            return "bool", temp_jasmin_code
         elif ctx.OPERADOR_RELACIONAL_LVL_1() is not None:
             operador = ctx.OPERADOR_RELACIONAL_LVL_1().getText()
             if ctx.getChild(0).getText() == "!":
-                self.visitTermo_relacional(ctx.getChild(1))
+                tipo, op_esq_jasmin_code = self.visitTermo_relacional(ctx.getChild(1))
                 if ctx.getChild(3).getText() == "!":
-                    self.visitTermo_relacional(ctx.getChild(4))
+                    tipo, op_dir_jasmin_code = self.visitTermo_relacional(ctx.getChild(4))
                 else:
-                    self.visitTermo_relacional(ctx.getChild(3))
+                    tipo, op_dir_jasmin_code = self.visitTermo_relacional(ctx.getChild(3))
             else:
-                self.visitTermo_relacional(ctx.getChild(0))
+                tipo, op_esq_jasmin_code = self.visitTermo_relacional(ctx.getChild(0))
                 if ctx.getChild(2).getText() == "!":
-                    self.visitTermo_relacional(ctx.getChild(3))
+                    tipo, op_dir_jasmin_code = self.visitTermo_relacional(ctx.getChild(3))
                 else:
-                    self.visitTermo_relacional(ctx.getChild(2))
+                    tipo, op_dir_jasmin_code = self.visitTermo_relacional(ctx.getChild(2))
+
+            temp_jasmin_code += op_esq_jasmin_code
+            temp_jasmin_code += op_dir_jasmin_code
 
             if operador == ">=":
-                self.jasmin_code += f"if_icmpge ;implementar labels\n"
+                temp_jasmin_code += f"if_icmpge ;implementar labels\n"
             elif operador == "<=":
-                self.jasmin_code += f"if_icmple ;implementar labels\n"
+                temp_jasmin_code += f"if_icmple ;implementar labels\n"
             elif operador == ">":
-                self.jasmin_code += f"if_icmpgt ;implementar labels\n"
+                temp_jasmin_code += f"if_icmpgt ;implementar labels\n"
             else:
-                self.jasmin_code += f"if_icmplt ;implementar labels\n"
+                temp_jasmin_code += f"if_icmplt ;implementar labels\n"
+            return "bool", temp_jasmin_code
         else:
             return self.visitTermo_relacional(ctx.termo_relacional())
 
     # Visit a parse tree produced by javaSimplesParser#termo_relacional.
     def visitTermo_relacional(self, ctx: javaSimplesParser.Termo_relacionalContext):
         print("carregando valor booleano...")
+        temp_jasmin_code = ""
+
         if ctx.IDENTIFICADOR() is not None:
             identificador = ctx.IDENTIFICADOR().getText()
             variavel, tipo = self.variablesTable[identificador]
-            self.carregaVariavel(variavel, tipo)
-            return tipo
+            temp_jasmin_code = self.carregaVariavel(variavel, tipo)
+            return "bool", temp_jasmin_code
         elif ctx.VALOR_INT() is not None:
             valor = ctx.VALOR_INT().getText()
-            self.jasmin_code += f"ldc {valor}\n"
-            return "int"
+            temp_jasmin_code += f"ldc {valor}\n"
+            return "bool", temp_jasmin_code
         elif ctx.VALOR_FLOAT() is not None:
             valor = ctx.VALOR_FLOAT().getText()
-            self.jasmin_code += f"ldc {valor}\n"
-            return "float"
+            temp_jasmin_code += f"ldc {valor}\n"
+            return "bool", temp_jasmin_code
         elif ctx.VALOR_BOOL() is not None:
             valor = ctx.VALOR_BOOL().getText()
             if valor == "true":
-                self.jasmin_code += f"ldc 1\n"
+                temp_jasmin_code += f"ldc 1\n"
             else:
-                self.jasmin_code += f"ldc 0\n"
+                temp_jasmin_code += f"ldc 0\n"
+            return "bool", temp_jasmin_code
         else:  # Jasmin to do
-            expr = self.visitExpr_aritimetica(ctx.expr_relacional())
+            expr = self.visitExpr_relacional(ctx.expr_relacional())
             return expr
 
     #################################################################

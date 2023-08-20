@@ -4,5 +4,5 @@ x, y : int;
 a, b : float;
 p : bool;
 const Carlos = 420;
-p = x < y;
+x = y >= 4;
 end
