@@ -10,6 +10,7 @@ fstore 3
 ldc 0
 istore 4
 ; fim das declaracoes
+; Comando atrib
 iload 0
 iload 1
 if_icmplt ;implementar labels

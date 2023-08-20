@@ -9,7 +9,7 @@ class MyVisitor(javaSimplesVisitor):
         self.output_file = output_file
         self.jasmin_code = ""
         self.variablesTable = {}
-        self.palavras_reservadas = javaSimplesLexer.literalNames # Variáveis não podem usar esses nomes
+        self.palavras_reservadas = javaSimplesLexer.literalNames  # Variáveis não podem usar esses nomes
 
     def save_jasmin_code(self):
         with open(self.output_file, "w") as file:
@@ -59,36 +59,40 @@ class MyVisitor(javaSimplesVisitor):
     # Vendo todas as declarações de variaveis e constantes do codigo
     def visitDeclaracoes(self, ctx: javaSimplesParser.DeclaracoesContext):
         print("Iniciando Declarações...")
-        self.jasmin_code += f"; inicio das declaracoes\n"
+        temp_jasmin_code = ""
+        temp_jasmin_code += f"; inicio das declaracoes\n"
         for declaracao in ctx.decl_de_var():
-            self.visitDecl_de_var(declaracao)
+            temp_jasmin_code += self.visitDecl_de_var(declaracao)
         for declaracao in ctx.decl_de_const():
             self.visitDecl_de_const(declaracao)
 
-        self.jasmin_code += f"; fim das declaracoes\n"
-        return len(self.variablesTable)
+        temp_jasmin_code += f"; fim das declaracoes\n"
+        # self.jasmin_code = temp_jasmin_code
+        return len(self.variablesTable), temp_jasmin_code
 
     # Visit a parse tree produced by javaSimplesParser#decl_de_var.
     def visitDecl_de_var(self, ctx: javaSimplesParser.Decl_de_varContext):
         print("Declarando Variaveis...")
         variable_names = ctx.lista_de_var().IDENTIFICADOR()
         data_type = ctx.TIPO().getText()
+        temp_jasmin_code = ""
 
         for variable_name in variable_names:
             self.variablesTable[variable_name.getText()] = (len(self.variablesTable), data_type)
             if data_type == "int":
-                self.jasmin_code += f"ldc 0\n"
-                self.jasmin_code += f"istore {self.variablesTable[variable_name.getText()][0]}\n"
+                temp_jasmin_code += f"ldc 0\n"
+                temp_jasmin_code += f"istore {self.variablesTable[variable_name.getText()][0]}\n"
             elif data_type == "float":
-                self.jasmin_code += f"ldc 0\n"
-                self.jasmin_code += f"fstore {self.variablesTable[variable_name.getText()][0]}\n"
+                temp_jasmin_code += f"ldc 0\n"
+                temp_jasmin_code += f"fstore {self.variablesTable[variable_name.getText()][0]}\n"
             elif data_type == "str":
-                self.jasmin_code += f'ldc ""\n'
-                self.jasmin_code += f"astore {self.variablesTable[variable_name.getText()][0]}\n"
+                temp_jasmin_code += f'ldc ""\n'
+                temp_jasmin_code += f"astore {self.variablesTable[variable_name.getText()][0]}\n"
             else:
-                self.jasmin_code += f'ldc 0\n'
-                self.jasmin_code += f"istore {self.variablesTable[variable_name.getText()][0]}\n"
+                temp_jasmin_code += f'ldc 0\n'
+                temp_jasmin_code += f"istore {self.variablesTable[variable_name.getText()][0]}\n"
             print(f"\tCriando Variavel-> {variable_name.getText()} do Tipo {data_type}")
+        return temp_jasmin_code
 
     # Visit a parse tree produced by javaSimplesParser#decl_de_var_const.
     def visitDecl_de_const(self, ctx: javaSimplesParser.Decl_de_constContext):
@@ -284,8 +288,8 @@ class MyVisitor(javaSimplesVisitor):
         # TODO: Verificar o identificador a ser impresso existe
         self.jasmin_code += "; Comando print\n"
         print(ctx.getText())
-        #teste = self.visit(ctx.lista_de_expressoes())
-        #print(teste)
+        # teste = self.visit(ctx.lista_de_expressoes())
+        # print(teste)
         return self.visitChildren(ctx)
 
     # Visit a parse tree produced by javaSimplesParser#comando_break.
