@@ -1,20 +1,23 @@
-; inicio das declaracoes
-ldc 0
-istore 0
-ldc 0
-istore 1
-ldc 0
-fstore 2
-ldc 0
-fstore 3
-ldc 0
-istore 4
-; fim das declaracoes
-; Comando atrib
-; Comando atrib
-iload 1
-ldc 4
-if_icmpge ;implementar labels
-iload 1
-ldc 4
-if_icmpge ;implementar labels
+.class public Output.j
+.super java/lang/Object
+
+.method public static soma(II)I
+	.limit stack 1
+	.limit locals 1
+.end method
+.method public static main([Ljava/lang/String;)V
+	.limit stack 1
+	.limit locals 5
+	; inicio das declaracoes
+	ldc 0
+	istore 0
+	ldc 0
+	istore 1
+	ldc 0
+	fstore 2
+	ldc 0
+	fstore 3
+	ldc 0
+	istore 4
+	; fim das declaracoes
+.end method
