@@ -13,11 +13,20 @@ class MyVisitor(javaSimplesVisitor):
         self.dict_variavel_valor = {}
         logging.basicConfig(level=logging.DEBUG)
         self.stack = [1]
+        self.higher_stack_size = 1
         self.palavras_reservadas = javaSimplesLexer.literalNames  # Variáveis não podem usar esses nomes
 
     def save_jasmin_code(self):
         with open(self.nome_do_programa, "w") as file:
             file.write(self.jasmin_code)
+
+    def atualiza_pilha(self, operacao):
+        if operacao == "pop":
+            self.stack.pop()
+        else:
+            self.stack.append(1)
+            if len(self.stack) > self.higher_stack_size:
+                self.higher_stack_size = len(self.stack)
 
     def conta_variaveis(self):
         count = 0
@@ -30,16 +39,16 @@ class MyVisitor(javaSimplesVisitor):
         temp_jasmin_code = ""
         if tipo == "int":
             temp_jasmin_code += f"\tiload {identificador}\n"
-            self.stack.append(1)
+            self.atualiza_pilha("append")
         elif tipo == "float":
             temp_jasmin_code += f"\tfload {identificador}\n"
-            self.stack.append(1)
+            self.atualiza_pilha("append")
         elif tipo == "str":
             temp_jasmin_code += f"\taload {identificador}"
-            self.stack.append(1)
+            self.atualiza_pilha("append")
         else:
             temp_jasmin_code += f"\tiload {identificador}"
-            self.stack.append(1)
+            self.atualiza_pilha("append")
         return temp_jasmin_code
 
     def adicionar_funcoes_de_leitura_no_codigo_jasmin(self):
@@ -83,13 +92,14 @@ class MyVisitor(javaSimplesVisitor):
         if ctx.comando():
             for comando in ctx.comando():
                 comando_jasmin_code += self.visitComando(comando)
-
-        self.jasmin_code += f"\t.limit stack {len(self.stack)}\n"
+        self.jasmin_code += f"\t.limit stack {self.higher_stack_size}\n"
         self.jasmin_code += f"\t.limit locals {n_variaveis}\n"
         self.jasmin_code += decl_jasmin_code
         self.jasmin_code += comando_jasmin_code
         self.jasmin_code += f".end method"
         self.variablesTable = {}
+        self.stack = [1]
+        self.higher_stack_size = 1
 
     # Visit a parse tree produced by javaSimplesParser#dec_de_func.
     def visitDec_de_func(self, ctx: javaSimplesParser.Dec_de_funcContext):
@@ -107,7 +117,7 @@ class MyVisitor(javaSimplesVisitor):
                 self.visitComando(comando)
 
         self.jasmin_code += cabc_da_funcao
-        self.jasmin_code += f"\t.limit stack {len(self.stack)}\n"
+        self.jasmin_code += f"\t.limit stack {self.higher_stack_size}\n"
         self.jasmin_code += f"\t.limit locals {n_variaveis}\n"
         self.jasmin_code += decl_jasmin_code
         self.jasmin_code += comando_jasmin_code
@@ -115,6 +125,8 @@ class MyVisitor(javaSimplesVisitor):
 
         logging.debug("Terminando a declaração de função...")
         self.variablesTable = {}
+        self.stack = [1]
+        self.higher_stack_size = 1
 
     # Visit a parse tree produced by javaSimplesParser#cabecalho_de_func.
     def visitCabecalho_de_func(self, ctx: javaSimplesParser.Cabecalho_de_funcContext):
@@ -243,8 +255,8 @@ class MyVisitor(javaSimplesVisitor):
             tipo_expressao, temp_jasmin_code = self.visitExpr_relacional(ctx.expr_relacional())
         elif ctx.VALOR_STR():
             texto = ctx.VALOR_STR().getText()
-            temp_jasmin_code += f'\tldc {texto}\n'
-            self.stack.append(1)
+            temp_jasmin_code += f'\tldc "{texto}"\n'
+            self.atualiza_pilha("append")
             tipo_expressao = "str"
         elif ctx.chamada_funcao():
             tipo_expressao, temp_jasmin_code = self.visitChamada_funcao(ctx.chamada_funcao())
@@ -261,20 +273,20 @@ class MyVisitor(javaSimplesVisitor):
             if operador == "*":
                 if tipo_operando_esq == "float" or tipo_operando_dir == "float":
                     temp_jasmin_code += "\tfmult\n"
-                    self.stack.pop()
+                    self.atualiza_pilha("pop")
                     return "float", temp_jasmin_code
                 else:
                     temp_jasmin_code += "\timult\n"
-                    self.stack.pop()
+                    self.atualiza_pilha("pop")
                     return "int", temp_jasmin_code
             else:
                 if tipo_operando_esq == "float" or tipo_operando_dir == "float":
                     temp_jasmin_code += "\tfdiv\n"
-                    self.stack.pop()
+                    self.atualiza_pilha("pop")
                     return "float", temp_jasmin_code
                 else:
                     temp_jasmin_code += "\tidiv\n"
-                    self.stack.pop()
+                    self.atualiza_pilha("pop")
                     return "int", temp_jasmin_code
         elif ctx.OPERADOR_ARIT_LVL_1() is not None:
             operador = ctx.OPERADOR_ARIT_LVL_1().getText()
@@ -288,20 +300,20 @@ class MyVisitor(javaSimplesVisitor):
             if operador == "+":
                 if tipo_operando_esq == "float" or tipo_operando_dir == "float":
                     temp_jasmin_code += "\tfadd\n"
-                    self.stack.pop()
+                    self.atualiza_pilha("pop")
                     return "float", temp_jasmin_code
                 else:
                     temp_jasmin_code += "\tiadd\n"
-                    self.stack.pop()
+                    self.atualiza_pilha("pop")
                     return "int", temp_jasmin_code
             else:
                 if tipo_operando_esq == "float" or tipo_operando_dir == "float":
                     temp_jasmin_code += "\tfsub\n"
-                    self.stack.pop()
+                    self.atualiza_pilha("pop")
                     return "float", temp_jasmin_code
                 else:
                     temp_jasmin_code += "\tisub\n"
-                    self.stack.pop()
+                    self.atualiza_pilha("pop")
                     return "int", temp_jasmin_code
         else:
             return self.visitTermo_aritimetico(ctx.termo_aritimetico())
@@ -324,12 +336,12 @@ class MyVisitor(javaSimplesVisitor):
         elif ctx.VALOR_INT() is not None:
             valor = ctx.VALOR_INT().getText()
             temp_jasmin_code += f"\tldc {valor}\n"
-            self.stack.append(1)
+            self.atualiza_pilha("append")
             return "int", temp_jasmin_code
         elif ctx.VALOR_FLOAT() is not None:
             valor = ctx.VALOR_FLOAT().getText()
             temp_jasmin_code += f"\tldc {valor}\n"
-            self.stack.append(1)
+            self.atualiza_pilha("append")
             return "float", temp_jasmin_code
         else:  # Jasmin to do
             expr = self.visitExpr_aritimetica(ctx.expr_aritimetica())
@@ -359,10 +371,10 @@ class MyVisitor(javaSimplesVisitor):
 
             if operador == "==":
                 temp_jasmin_code += f"if_icmpeq ;implementar labels\n"
-                self.stack.pop()
+                self.atualiza_pilha("pop")
             else:
                 temp_jasmin_code += f"if_icmpne ;implementar labels\n"
-                self.stack.pop()
+                self.atualiza_pilha("pop")
             return "bool", temp_jasmin_code
         elif ctx.OPERADOR_RELACIONAL_LVL_1() is not None:
             operador = ctx.OPERADOR_RELACIONAL_LVL_1().getText()
@@ -384,16 +396,16 @@ class MyVisitor(javaSimplesVisitor):
 
             if operador == ">=":
                 temp_jasmin_code += f"if_icmpge ;implementar labels\n"
-                self.stack.pop()
+                self.atualiza_pilha("pop")
             elif operador == "<=":
                 temp_jasmin_code += f"if_icmple ;implementar labels\n"
-                self.stack.pop()
+                self.atualiza_pilha("pop")
             elif operador == ">":
                 temp_jasmin_code += f"if_icmpgt ;implementar labels\n"
-                self.stack.pop()
+                self.atualiza_pilha("pop")
             else:
                 temp_jasmin_code += f"if_icmplt ;implementar labels\n"
-                self.stack.pop()
+                self.atualiza_pilha("pop")
             return "bool", temp_jasmin_code
         else:
             return self.visitTermo_relacional(ctx.termo_relacional())
@@ -411,21 +423,21 @@ class MyVisitor(javaSimplesVisitor):
         elif ctx.VALOR_INT() is not None:
             valor = ctx.VALOR_INT().getText()
             temp_jasmin_code += f"ldc {valor}\n"
-            self.stack.append(1)
+            self.atualiza_pilha("append")
             return "bool", temp_jasmin_code
         elif ctx.VALOR_FLOAT() is not None:
             valor = ctx.VALOR_FLOAT().getText()
             temp_jasmin_code += f"ldc {valor}\n"
-            self.stack.append(1)
+            self.atualiza_pilha("append")
             return "bool", temp_jasmin_code
         elif ctx.VALOR_BOOL() is not None:
             valor = ctx.VALOR_BOOL().getText()
             if valor == "true":
                 temp_jasmin_code += f"ldc 1\n"
-                self.stack.append(1)
+                self.atualiza_pilha("append")
             else:
                 temp_jasmin_code += f"ldc 0\n"
-                self.stack.append(1)
+                self.atualiza_pilha("append")
             return "bool", temp_jasmin_code
         else:  # Jasmin to do
             expr = self.visitExpr_relacional(ctx.expr_relacional())

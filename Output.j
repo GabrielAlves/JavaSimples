@@ -14,7 +14,7 @@
 .end method
 
 .method public static main([Ljava/lang/String;)V
-	.limit stack 1
+	.limit stack 3
 	.limit locals 2
 	; inicio das declaracoes
 	ldc 0
