@@ -3,49 +3,25 @@ from gen.javaSimplesLexer import javaSimplesLexer
 from gen.javaSimplesParser import javaSimplesParser
 from gen.javaSimplesVisitor import javaSimplesVisitor
 import logging
-import sys
 
 class MyVisitor(javaSimplesVisitor):
-    def __init__(self, path_do_programa):
-        self.nome_do_programa = path_do_programa.split('/')[-1]
-        self.path_do_programa = path_do_programa
+    def __init__(self, nome_do_programa):
+        self.nome_do_programa = nome_do_programa
         self.jasmin_code = ""
         self.variablesTable = {}
+<<<<<<< HEAD
         self.dict_variavel_valor = {}
-        logging.basicConfig(level=logging.DEBUG)
+        self.stack = []
+        logging.basicConfig(level = logging.INFO)
+
+=======
         self.stack = [1]
-        self.higher_stack_size = 1
         self.palavras_reservadas = javaSimplesLexer.literalNames  # Variáveis não podem usar esses nomes
-
-    def executar(self):
-        input_stream = FileStream(self.path_do_programa)
-        # Criar o lexer
-        lexer = javaSimplesLexer(input_stream)
-
-        # Criar o stream de tokens
-        token_stream = CommonTokenStream(lexer)
-
-        # Criar o parser
-        parser = javaSimplesParser(token_stream)
-
-        # Obter a árvore de análise sintática
-        tree = parser.programa()
-
-        # Visitar a árvore de análise sintática
-        self.visit(tree)
+>>>>>>> 7442ae3e7cddadd85538eace335c502efe6c9d5a
 
     def save_jasmin_code(self):
-        with open(self.nome_do_programa.split('.')[0] + ".j", "w") as file:
+        with open(self.nome_do_programa, "w") as file:
             file.write(self.jasmin_code)
-            return file.name
-
-    def atualiza_pilha(self, operacao):
-        if operacao == "pop":
-            self.stack.pop()
-        else:
-            self.stack.append(1)
-            if len(self.stack) > self.higher_stack_size:
-                self.higher_stack_size = len(self.stack)
 
     def conta_variaveis(self):
         count = 0
@@ -58,71 +34,48 @@ class MyVisitor(javaSimplesVisitor):
         temp_jasmin_code = ""
         if tipo == "int":
             temp_jasmin_code += f"\tiload {identificador}\n"
-            self.atualiza_pilha("append")
+            self.stack.append(1)
         elif tipo == "float":
             temp_jasmin_code += f"\tfload {identificador}\n"
-            self.atualiza_pilha("append")
+            self.stack.append(1)
         elif tipo == "str":
             temp_jasmin_code += f"\taload {identificador}"
-            self.atualiza_pilha("append")
+            self.stack.append(1)
         else:
             temp_jasmin_code += f"\tiload {identificador}"
-            self.atualiza_pilha("append")
+            self.stack.append(1)
         return temp_jasmin_code
-
-    def adicionar_funcoes_de_leitura_no_codigo_jasmin(self):
-        self.adicionar_funcao_ler_inteiro_no_codigo()
-        self.jasmin_code += "\n\n"
-
-    def adicionar_funcao_ler_inteiro_no_codigo(self):
-        self.jasmin_code += '''.method public static lerInteiro()I
-   .limit stack 3
-   .limit locals 1
-
-   new java/util/Scanner
-   dup
-   getstatic java/lang/System/in Ljava/io/InputStream;
-   invokespecial java/util/Scanner/<init>(Ljava/io/InputStream;)V
-   invokevirtual java/util/Scanner/nextInt()I ; usa o nextInt do Scanner
-   ireturn
-.end method'''
 
     #################################################################
     ######                     Ingrid                          ######
     #################################################################
     # Visit a parse tree produced by javaSimplesParser#programa.
     def visitPrograma(self, ctx: javaSimplesParser.ProgramaContext):
-        print("Iniciando analise do codigo...")
-        self.jasmin_code += f".class public {self.nome_do_programa.split('.')[0]}\n"
+        self.jasmin_code += f".class public {self.nome_do_programa}\n"
         self.jasmin_code += f".super java/lang/Object\n\n"
         return self.visitChildren(ctx)
 
     # Visit a parse tree produced by javaSimplesParser#funcao_main.
     def visitFuncao_main(self, ctx: javaSimplesParser.Funcao_mainContext):
-        logging.debug("Criando a Main...")
+        print("Criando a Main...")
         n_variaveis = 1
         decl_jasmin_code = ""
-        comando_jasmin_code = ""
-        self.adicionar_funcoes_de_leitura_no_codigo_jasmin()
         self.jasmin_code += f".method public static main([Ljava/lang/String;)V\n"
         if ctx.declaracoes():
             decl_jasmin_code = self.visitDeclaracoes(ctx.declaracoes())
             n_variaveis = self.conta_variaveis()
         if ctx.comando():
-            for comando in ctx.comando():
-                comando_jasmin_code += self.visitComando(comando)
-        self.jasmin_code += f"\t.limit stack {self.higher_stack_size}\n"
+            self.visitComando(ctx.comando())
+
+        self.jasmin_code += f"\t.limit stack {len(self.stack)}\n"
         self.jasmin_code += f"\t.limit locals {n_variaveis}\n"
         self.jasmin_code += decl_jasmin_code
-        self.jasmin_code += comando_jasmin_code
-        self.jasmin_code += f".end method\n"
+        self.jasmin_code += f".end method"
         self.variablesTable = {}
-        self.stack = [1]
-        self.higher_stack_size = 1
 
     # Visit a parse tree produced by javaSimplesParser#dec_de_func.
     def visitDec_de_func(self, ctx: javaSimplesParser.Dec_de_funcContext):
-        logging.debug("Começando a declaração de função...")
+        print("Começando a declaração de função...")
         n_variaveis = 1
         decl_jasmin_code = ""
         comando_jasmin_code = ""
@@ -132,20 +85,16 @@ class MyVisitor(javaSimplesVisitor):
             n_variaveis = self.conta_variaveis()
         if ctx.comando():
             # comando_jasmin_code = self.visitComando(ctx.comando())
-            for comando in ctx.comando():
-                self.visitComando(comando)
+            self.visitComando(ctx.comando())
 
         self.jasmin_code += cabc_da_funcao
-        self.jasmin_code += f"\t.limit stack {self.higher_stack_size}\n"
+        self.jasmin_code += f"\t.limit stack {len(self.stack)}\n"
         self.jasmin_code += f"\t.limit locals {n_variaveis}\n"
         self.jasmin_code += decl_jasmin_code
         self.jasmin_code += comando_jasmin_code
-        self.jasmin_code += f".end method\n\n"
+        self.jasmin_code += f".end method\n"
 
-        logging.debug("Terminando a declaração de função...")
-        self.variablesTable = {}
-        self.stack = [1]
-        self.higher_stack_size = 1
+        print("Terminando a declaração de função...")
 
     # Visit a parse tree produced by javaSimplesParser#cabecalho_de_func.
     def visitCabecalho_de_func(self, ctx: javaSimplesParser.Cabecalho_de_funcContext):
@@ -169,7 +118,7 @@ class MyVisitor(javaSimplesVisitor):
     # Visit a parse tree produced by javaSimplesParser#lista_de_parametros.
     def visitLista_de_parametros(self, ctx: javaSimplesParser.Lista_de_parametrosContext):
         temp_jasmin_code = ""
-        logging.debug("Recebendo Parametros...")
+
         for parametro in ctx.parametro():
             temp_jasmin_code += self.visitParametro(parametro)
 
@@ -178,17 +127,15 @@ class MyVisitor(javaSimplesVisitor):
     # Visit a parse tree produced by javaSimplesParser#parametro.
     def visitParametro(self, ctx: javaSimplesParser.ParametroContext):
         temp_jasmin_code = ""
-        tipo = ctx.TIPO().getText()
-        if tipo == "int":
+
+        if ctx.TIPO().getText() == "int":
             temp_jasmin_code += f"I"
-        elif tipo == "float":
+        elif ctx.TIPO().getText() == "float":
             temp_jasmin_code += f"F"
-        elif tipo == "str":
+        elif ctx.TIPO().getText() == "str":
             temp_jasmin_code += f"Ljava/lang/String"
-        elif tipo == "bool":
+        elif ctx.TIPO().getText() == "bool":
             temp_jasmin_code += f"I"
-        logging.debug(f"\tParametro -> {ctx.IDENTIFICADOR().getText()} do tipo {tipo}")
-        self.variablesTable[ctx.IDENTIFICADOR().getText()] = (len(self.variablesTable), tipo)
 
         return temp_jasmin_code
 
@@ -198,7 +145,7 @@ class MyVisitor(javaSimplesVisitor):
     #### Minhas Notas: Rever os returns, descobrir o que é pra retornar pras funções
     # Vendo todas as declarações de variaveis e constantes do codigo
     def visitDeclaracoes(self, ctx: javaSimplesParser.DeclaracoesContext):
-        # logging.debug("Iniciando Declarações...")
+        logging.debug("Iniciando Declarações...")
         temp_jasmin_code = ""
         temp_jasmin_code += f"\t; inicio das declaracoes\n"
         for declaracao in ctx.decl_de_var():
@@ -207,6 +154,8 @@ class MyVisitor(javaSimplesVisitor):
             self.visitDecl_de_const(declaracao)
 
         temp_jasmin_code += f"\t; fim das declaracoes\n"
+        ############################ Debug
+        # self.jasmin_code = temp_jasmin_code
         return temp_jasmin_code
 
     # Visit a parse tree produced by javaSimplesParser#decl_de_var.
@@ -217,25 +166,32 @@ class MyVisitor(javaSimplesVisitor):
         temp_jasmin_code = ""
 
         for variable_name in variable_names:
-            if variable_name.getText() in self.variablesTable:
-                linha = ctx.start.line
-                logging.debug(f"Erro na linha {linha}, variavel já declarada")
-                exit(1)
+            self.variablesTable[variable_name.getText()] = (len(self.variablesTable), data_type)
+            if data_type == "int":
+<<<<<<< HEAD
+                temp_jasmin_code += f"ldc 0\n"
+                
+                temp_jasmin_code += f"istore {self.variablesTable[variable_name.getText()][0]}\n"
+=======
+                temp_jasmin_code += f"\tldc 0\n"
+                temp_jasmin_code += f"\tistore {self.variablesTable[variable_name.getText()][0]}\n"
+>>>>>>> 7442ae3e7cddadd85538eace335c502efe6c9d5a
+            elif data_type == "float":
+                temp_jasmin_code += f"\tldc 0\n"
+                temp_jasmin_code += f"\tfstore {self.variablesTable[variable_name.getText()][0]}\n"
+            elif data_type == "str":
+                temp_jasmin_code += f'\tldc ""\n'
+                temp_jasmin_code += f"\tastore {self.variablesTable[variable_name.getText()][0]}\n"
             else:
-                self.variablesTable[variable_name.getText()] = (len(self.variablesTable), data_type)
-                if data_type == "int":
-                    temp_jasmin_code += f"\tldc 0\n"
-                    temp_jasmin_code += f"\tistore {self.variablesTable[variable_name.getText()][0]}\n"
-                elif data_type == "float":
-                    temp_jasmin_code += f"\tldc 0\n"
-                    temp_jasmin_code += f"\tfstore {self.variablesTable[variable_name.getText()][0]}\n"
-                elif data_type == "str":
-                    temp_jasmin_code += f'\tldc ""\n'
-                    temp_jasmin_code += f"\tastore {self.variablesTable[variable_name.getText()][0]}\n"
-                else:
-                    temp_jasmin_code += f'\tldc 0\n'
-                    temp_jasmin_code += f"\tistore {self.variablesTable[variable_name.getText()][0]}\n"
-                logging.debug(f"\tCriando Variavel-> {variable_name.getText()} do Tipo {data_type}")
+<<<<<<< HEAD
+                temp_jasmin_code += f'ldc 0\n'
+                temp_jasmin_code += f"istore {self.variablesTable[variable_name.getText()][0]}\n"
+            logging.debug(f"\tCriando Variavel-> {variable_name.getText()} do Tipo {data_type}")
+=======
+                temp_jasmin_code += f'\tldc 0\n'
+                temp_jasmin_code += f"\tistore {self.variablesTable[variable_name.getText()][0]}\n"
+            print(f"\tCriando Variavel-> {variable_name.getText()} do Tipo {data_type}")
+>>>>>>> 7442ae3e7cddadd85538eace335c502efe6c9d5a
         return temp_jasmin_code
 
     # Visit a parse tree produced by javaSimplesParser#decl_de_var_const.
@@ -274,11 +230,12 @@ class MyVisitor(javaSimplesVisitor):
             tipo_expressao, temp_jasmin_code = self.visitExpr_relacional(ctx.expr_relacional())
         elif ctx.VALOR_STR():
             texto = ctx.VALOR_STR().getText()
-            temp_jasmin_code += f'\tldc "{texto}"\n'
-            self.atualiza_pilha("append")
+            temp_jasmin_code += f'ldc "{texto}"\n'
+            self.stack.append(1)
             tipo_expressao = "str"
         elif ctx.chamada_funcao():
             tipo_expressao, temp_jasmin_code = self.visitChamada_funcao(ctx.chamada_funcao())
+        self.jasmin_code += temp_jasmin_code
         return tipo_expressao, temp_jasmin_code
 
     # Visit a parse tree produced by javaSimplesParser#expr_aritimetica.
@@ -291,21 +248,21 @@ class MyVisitor(javaSimplesVisitor):
             tipo_operando_dir = self.visitExpr_aritimetica(ctx.getChild(2))
             if operador == "*":
                 if tipo_operando_esq == "float" or tipo_operando_dir == "float":
-                    temp_jasmin_code += "\tfmult\n"
-                    self.atualiza_pilha("pop")
+                    temp_jasmin_code += "fmult\n"
+                    self.stack.pop()
                     return "float", temp_jasmin_code
                 else:
-                    temp_jasmin_code += "\timult\n"
-                    self.atualiza_pilha("pop")
+                    temp_jasmin_code += "imult\n"
+                    self.stack.pop()
                     return "int", temp_jasmin_code
             else:
                 if tipo_operando_esq == "float" or tipo_operando_dir == "float":
-                    temp_jasmin_code += "\tfdiv\n"
-                    self.atualiza_pilha("pop")
+                    temp_jasmin_code += "fdiv\n"
+                    self.stack.pop()
                     return "float", temp_jasmin_code
                 else:
-                    temp_jasmin_code += "\tidiv\n"
-                    self.atualiza_pilha("pop")
+                    temp_jasmin_code += "idiv\n"
+                    self.stack.pop()
                     return "int", temp_jasmin_code
         elif ctx.OPERADOR_ARIT_LVL_1() is not None:
             operador = ctx.OPERADOR_ARIT_LVL_1().getText()
@@ -318,21 +275,21 @@ class MyVisitor(javaSimplesVisitor):
 
             if operador == "+":
                 if tipo_operando_esq == "float" or tipo_operando_dir == "float":
-                    temp_jasmin_code += "\tfadd\n"
-                    self.atualiza_pilha("pop")
+                    temp_jasmin_code += "fadd\n"
+                    self.stack.pop()
                     return "float", temp_jasmin_code
                 else:
-                    temp_jasmin_code += "\tiadd\n"
-                    self.atualiza_pilha("pop")
+                    temp_jasmin_code += "iadd\n"
+                    self.stack.pop()
                     return "int", temp_jasmin_code
             else:
                 if tipo_operando_esq == "float" or tipo_operando_dir == "float":
-                    temp_jasmin_code += "\tfsub\n"
-                    self.atualiza_pilha("pop")
+                    temp_jasmin_code += "fsub\n"
+                    self.stack.pop()
                     return "float", temp_jasmin_code
                 else:
-                    temp_jasmin_code += "\tisub\n"
-                    self.atualiza_pilha("pop")
+                    temp_jasmin_code += "isub\n"
+                    self.stack.pop()
                     return "int", temp_jasmin_code
         else:
             return self.visitTermo_aritimetico(ctx.termo_aritimetico())
@@ -343,24 +300,18 @@ class MyVisitor(javaSimplesVisitor):
         temp_jasmin_code = ""
         if ctx.IDENTIFICADOR() is not None:
             identificador = ctx.IDENTIFICADOR().getText()
-
-            if identificador not in self.variablesTable:
-                linha = ctx.start.line
-                logging.debug(f"Erro: na linha: {linha}. O identificador \"{identificador}\" não existe")
-                exit(1)
-
             variavel, tipo = self.variablesTable[identificador]
             temp_jasmin_code = self.carregaVariavel(variavel, tipo)
             return tipo, temp_jasmin_code
         elif ctx.VALOR_INT() is not None:
             valor = ctx.VALOR_INT().getText()
-            temp_jasmin_code += f"\tldc {valor}\n"
-            self.atualiza_pilha("append")
+            temp_jasmin_code += f"ldc {valor}\n"
+            self.stack.append(1)
             return "int", temp_jasmin_code
         elif ctx.VALOR_FLOAT() is not None:
             valor = ctx.VALOR_FLOAT().getText()
-            temp_jasmin_code += f"\tldc {valor}\n"
-            self.atualiza_pilha("append")
+            temp_jasmin_code += f"ldc {valor}\n"
+            self.stack.append(1)
             return "float", temp_jasmin_code
         else:  # Jasmin to do
             expr = self.visitExpr_aritimetica(ctx.expr_aritimetica())
@@ -390,10 +341,10 @@ class MyVisitor(javaSimplesVisitor):
 
             if operador == "==":
                 temp_jasmin_code += f"if_icmpeq ;implementar labels\n"
-                self.atualiza_pilha("pop")
+                self.stack.pop()
             else:
                 temp_jasmin_code += f"if_icmpne ;implementar labels\n"
-                self.atualiza_pilha("pop")
+                self.stack.pop()
             return "bool", temp_jasmin_code
         elif ctx.OPERADOR_RELACIONAL_LVL_1() is not None:
             operador = ctx.OPERADOR_RELACIONAL_LVL_1().getText()
@@ -415,16 +366,16 @@ class MyVisitor(javaSimplesVisitor):
 
             if operador == ">=":
                 temp_jasmin_code += f"if_icmpge ;implementar labels\n"
-                self.atualiza_pilha("pop")
+                self.stack.pop()
             elif operador == "<=":
                 temp_jasmin_code += f"if_icmple ;implementar labels\n"
-                self.atualiza_pilha("pop")
+                self.stack.pop()
             elif operador == ">":
                 temp_jasmin_code += f"if_icmpgt ;implementar labels\n"
-                self.atualiza_pilha("pop")
+                self.stack.pop()
             else:
                 temp_jasmin_code += f"if_icmplt ;implementar labels\n"
-                self.atualiza_pilha("pop")
+                self.stack.pop()
             return "bool", temp_jasmin_code
         else:
             return self.visitTermo_relacional(ctx.termo_relacional())
@@ -442,21 +393,21 @@ class MyVisitor(javaSimplesVisitor):
         elif ctx.VALOR_INT() is not None:
             valor = ctx.VALOR_INT().getText()
             temp_jasmin_code += f"ldc {valor}\n"
-            self.atualiza_pilha("append")
+            self.stack.append(1)
             return "bool", temp_jasmin_code
         elif ctx.VALOR_FLOAT() is not None:
             valor = ctx.VALOR_FLOAT().getText()
             temp_jasmin_code += f"ldc {valor}\n"
-            self.atualiza_pilha("append")
+            self.stack.append(1)
             return "bool", temp_jasmin_code
         elif ctx.VALOR_BOOL() is not None:
             valor = ctx.VALOR_BOOL().getText()
             if valor == "true":
                 temp_jasmin_code += f"ldc 1\n"
-                self.atualiza_pilha("append")
+                self.stack.append(1)
             else:
                 temp_jasmin_code += f"ldc 0\n"
-                self.atualiza_pilha("append")
+                self.stack.append(1)
             return "bool", temp_jasmin_code
         else:  # Jasmin to do
             expr = self.visitExpr_relacional(ctx.expr_relacional())
@@ -467,7 +418,8 @@ class MyVisitor(javaSimplesVisitor):
     #################################################################
     # Visit a parse tree produced by javaSimplesParser#comando.
     def visitComando(self, ctx: javaSimplesParser.ComandoContext):
-        return self.visitChildren(ctx)
+        x = 0
+        #return self.visitChildren(ctx)
 
     # Visit a parse tree produced by javaSimplesParser#comando_if.
     def visitComando_if(self, ctx: javaSimplesParser.Comando_ifContext):
@@ -481,90 +433,67 @@ class MyVisitor(javaSimplesVisitor):
 
     # Visit a parse tree produced by javaSimplesParser#comando_scanf.
     def visitComando_scanf(self, ctx: javaSimplesParser.Comando_scanfContext):
-        temp_jasmin_code = "; Comando scanf\n"
-
-        for identificador in ctx.lista_de_var().IDENTIFICADOR():
-            identificador = identificador.getText()
-            if identificador not in self.variablesTable:
-                logging.debug(f"Erro: variável \"{identificador}\" não existe")
-                exit(1)
-
-            pos_na_memoria = self.variablesTable[identificador][0]
-            tipo_da_variavel = self.variablesTable[identificador][1]
-
-            if tipo_da_variavel == "int":
-                temp_jasmin_code += f"\tinvokestatic {self.nome_do_programa}/lerInteiro()I\n"
-                temp_jasmin_code += f"\tistore {pos_na_memoria}\n"
-
-            elif tipo_da_variavel == "float":
-                pass
-
-            elif tipo_da_variavel == "bool":
-                pass
-
-            elif tipo_da_variavel == "str":
-                pass
-
-        return temp_jasmin_code
+        self.jasmin_code += "; Comando scanf\n"
+        return self.visitChildren(ctx)
 
     # Visit a parse tree produced by javaSimplesParser#comando_atrib.
     def visitComando_atrib(self, ctx: javaSimplesParser.Comando_atribContext):
-        temp_jasmin_code = "\t; Comando atrib\n"
+        self.jasmin_code += "; Comando atrib\n"
         identificador = ctx.IDENTIFICADOR()
         pos_na_memoria = self.variablesTable[identificador.getText()][0]
-        tipo_da_variavel = self.variablesTable[identificador.getText()][1]
-        tipo_da_expressao, codigo_da_expr = self.visitExpressao(ctx.expressao())
-        if tipo_da_expressao == tipo_da_variavel:
-            temp_jasmin_code += codigo_da_expr
-            if tipo_da_variavel == "int":
-                temp_jasmin_code += f"\tistore {pos_na_memoria}\n"
-                self.stack.pop()
+        tipo = self.variablesTable[identificador.getText()][1]
+        valor = self.resolver_expressao(ctx.expressao())
+        print(valor)
+        #print(self.teste)
+        # self.jasmin_code += f"ldc {valor}"
+        '''
+        if tipo == "int":
+            self.jasmin_code += f"istore {pos_na_memoria}"
 
-            elif tipo_da_variavel == "str":
-                temp_jasmin_code += f"\tastore {pos_na_memoria}\n"
-                self.stack.pop()
+        elif tipo == "str":
+            self.jasmin_code += f"astore {pos_na_memoria}"
 
-            elif tipo_da_variavel == "float":
-                temp_jasmin_code += f"\tfstore {pos_na_memoria}\n"
-                self.stack.pop()
+        elif tipo == "float":
+            self.jasmin_code += f"fstore {pos_na_memoria}"
 
-            elif tipo_da_variavel == "bool":
-                temp_jasmin_code += f"\tistore {pos_na_memoria}\n"
-                self.stack.pop()
-        else:
-            linha = ctx.start.line
-            logging.debug(f"Erro: na linha: {linha}, tipos incompativeis")
-            exit(1)
-        return temp_jasmin_code
+        elif tipo == "bool":
+            self.jasmin_code += f"istore {pos_na_memoria}"
+            '''
+        return self.visitChildren(ctx)
+
+    def resolver_expressao(self, ctx):
+        logging.debug("realizando expressão...")
+        print(ctx.getText())
+        if ctx.expr_aritimetica():
+            print(ctx.expr_aritimetica().getText())
+            resultado = eval(ctx.expr_aritimetica().getText())
+        elif ctx.expr_relacional():
+            resultado = eval(ctx.expr_relacional().getText())
+        elif ctx.VALOR_STR():
+            resultado = ctx.VALOR_STR().getText()
+        elif ctx.chamada_funcao():
+            #resultado = self.visitChamada_funcao(ctx.chamada_funcao())
+            pass
+
+        return resultado
+
+    def substituir_valores(self, expressao):
+        expressao = expressao.split()
+        for i in range(len(expressao)):
+            token = expressao[i]
+
+            if token in self.variablesTable:
+                expressao[i] = self.variablesTable[token]
+
 
     # Visit a parse tree produced by javaSimplesParser#comando_print.
     def visitComando_print(self, ctx: javaSimplesParser.Comando_printContext):
         # TODO: Verificar o identificador a ser impresso existe
-        temp_jasmin_code = "\t; Comando print\n"
-
-        for expressao in ctx.lista_de_expressoes().expressao():
-            tipo_da_expressao, codigo_da_expressao = self.visitExpressao(expressao)
-            temp_jasmin_code += "\tgetstatic java/lang/System/out Ljava/io/PrintStream;\n"
-            temp_jasmin_code += codigo_da_expressao
-            temp_jasmin_code += "\tinvokevirtual java/io/PrintStream/print"
-            #print(f"codigo da expressao: {codigo_da_expressao}")
-            if tipo_da_expressao == "int":
-                temp_jasmin_code += "(I)" # Print recebe inteiro.
-
-            elif tipo_da_expressao == "float":
-                temp_jasmin_code += "(F)" # Print recebe float
-
-            elif tipo_da_expressao == "bool":
-                temp_jasmin_code += "(I)" # Print recebe booleano como inteiro(0 ou 1)
-
-            elif tipo_da_expressao == "str":
-                temp_jasmin_code += "(Ljava/lang/String;)" # Print recebe string
-
-            temp_jasmin_code += "V\n" # Print retorna void
-
-            # pegar o que vai para a pilha
-
-        return temp_jasmin_code
+        self.jasmin_code += "; Comando print\n"
+        print(ctx.getText())
+        # teste = self.visit(ctx.lista_de_expressoes())
+        # print(teste)
+        return self.visitChildren(ctx)
 
     # Visit a parse tree produced by javaSimplesParser#comando_break.
     def visitComando_break(self, ctx: javaSimplesParser.Comando_breakContext):
@@ -580,3 +509,27 @@ class MyVisitor(javaSimplesVisitor):
     def visitChamada_funcao(self, ctx: javaSimplesParser.Chamada_funcaoContext):
         self.jasmin_code += "; Comando funcao\n"
         return self.visitChildren(ctx)
+
+
+if __name__ == '__main__':
+    # Ler o arquivo de entrada
+    input_stream = FileStream('./testes_entrada/funcao_testes_do_daniel.txt')
+    # print(input_stream)
+    # Criar o lexer
+    lexer = javaSimplesLexer(input_stream)
+
+    # Criar o stream de tokens
+    token_stream = CommonTokenStream(lexer)
+
+    # Criar o parser
+    parser = javaSimplesParser(token_stream)
+
+    # Obter a árvore de análise sintática
+    tree = parser.programa()
+
+    # Criar o visitor
+    visitor = MyVisitor("Output.j")
+
+    # Visitar a árvore de análise sintática
+    visitor.visit(tree)
+    visitor.save_jasmin_code()
