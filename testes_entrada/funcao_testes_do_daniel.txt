@@ -1,3 +1,6 @@
+/*soma(int x, int y): int
+return x + y;
+end*/
 main:
 var:
 x, y : int;
