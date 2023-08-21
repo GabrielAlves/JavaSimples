@@ -1,4 +1,6 @@
 soma(int x, int y): int
+var:
+    x, y : int;
 return x + y;
 end
 main:

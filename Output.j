@@ -3,7 +3,9 @@
 
 .method public static soma(II)I
 	.limit stack 1
-	.limit locals 1
+	.limit locals 2
+	; inicio das declaracoes
+	; fim das declaracoes
 .end method
 .method public static main([Ljava/lang/String;)V
 	.limit stack 1

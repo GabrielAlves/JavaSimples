@@ -39,6 +39,7 @@ class MyVisitor(javaSimplesVisitor):
             self.stack.append(1)
         return temp_jasmin_code
 
+
     #################################################################
     ######                     Ingrid                          ######
     #################################################################
@@ -88,6 +89,7 @@ class MyVisitor(javaSimplesVisitor):
         self.jasmin_code += f".end method\n"
 
         print("Terminando a declaração de função...")
+        self.variablesTable = {}
 
     # Visit a parse tree produced by javaSimplesParser#cabecalho_de_func.
     def visitCabecalho_de_func(self, ctx: javaSimplesParser.Cabecalho_de_funcContext):
@@ -119,16 +121,19 @@ class MyVisitor(javaSimplesVisitor):
 
     # Visit a parse tree produced by javaSimplesParser#parametro.
     def visitParametro(self, ctx: javaSimplesParser.ParametroContext):
+        print("Recebendo Parametro...")
         temp_jasmin_code = ""
-
-        if ctx.TIPO().getText() == "int":
+        tipo = ctx.TIPO().getText()
+        if tipo == "int":
             temp_jasmin_code += f"I"
-        elif ctx.TIPO().getText() == "float":
+        elif tipo == "float":
             temp_jasmin_code += f"F"
-        elif ctx.TIPO().getText() == "str":
+        elif tipo == "str":
             temp_jasmin_code += f"Ljava/lang/String"
-        elif ctx.TIPO().getText() == "bool":
+        elif tipo == "bool":
             temp_jasmin_code += f"I"
+        print(f"\tParametro -> {ctx.IDENTIFICADOR().getText()} do tipo {tipo}")
+        self.variablesTable[ctx.IDENTIFICADOR().getText()] = (len(self.variablesTable), tipo)
 
         return temp_jasmin_code
 
@@ -147,8 +152,6 @@ class MyVisitor(javaSimplesVisitor):
             self.visitDecl_de_const(declaracao)
 
         temp_jasmin_code += f"\t; fim das declaracoes\n"
-        ############################ Debug
-        # self.jasmin_code = temp_jasmin_code
         return temp_jasmin_code
 
     # Visit a parse tree produced by javaSimplesParser#decl_de_var.
@@ -159,20 +162,25 @@ class MyVisitor(javaSimplesVisitor):
         temp_jasmin_code = ""
 
         for variable_name in variable_names:
-            self.variablesTable[variable_name.getText()] = (len(self.variablesTable), data_type)
-            if data_type == "int":
-                temp_jasmin_code += f"\tldc 0\n"
-                temp_jasmin_code += f"\tistore {self.variablesTable[variable_name.getText()][0]}\n"
-            elif data_type == "float":
-                temp_jasmin_code += f"\tldc 0\n"
-                temp_jasmin_code += f"\tfstore {self.variablesTable[variable_name.getText()][0]}\n"
-            elif data_type == "str":
-                temp_jasmin_code += f'\tldc ""\n'
-                temp_jasmin_code += f"\tastore {self.variablesTable[variable_name.getText()][0]}\n"
+            if variable_name.getText() in self.variablesTable:
+                linha = ctx.start.line
+                print(f"Erro na linha {linha}, variavel já declarada")
+                exit(1)
             else:
-                temp_jasmin_code += f'\tldc 0\n'
-                temp_jasmin_code += f"\tistore {self.variablesTable[variable_name.getText()][0]}\n"
-            print(f"\tCriando Variavel-> {variable_name.getText()} do Tipo {data_type}")
+                self.variablesTable[variable_name.getText()] = (len(self.variablesTable), data_type)
+                if data_type == "int":
+                    temp_jasmin_code += f"\tldc 0\n"
+                    temp_jasmin_code += f"\tistore {self.variablesTable[variable_name.getText()][0]}\n"
+                elif data_type == "float":
+                    temp_jasmin_code += f"\tldc 0\n"
+                    temp_jasmin_code += f"\tfstore {self.variablesTable[variable_name.getText()][0]}\n"
+                elif data_type == "str":
+                    temp_jasmin_code += f'\tldc ""\n'
+                    temp_jasmin_code += f"\tastore {self.variablesTable[variable_name.getText()][0]}\n"
+                else:
+                    temp_jasmin_code += f'\tldc 0\n'
+                    temp_jasmin_code += f"\tistore {self.variablesTable[variable_name.getText()][0]}\n"
+                print(f"\tCriando Variavel-> {variable_name.getText()} do Tipo {data_type}")
         return temp_jasmin_code
 
     # Visit a parse tree produced by javaSimplesParser#decl_de_var_const.
