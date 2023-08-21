@@ -2,16 +2,17 @@ from antlr4 import *
 from gen.javaSimplesLexer import javaSimplesLexer
 from gen.javaSimplesParser import javaSimplesParser
 from gen.javaSimplesVisitor import javaSimplesVisitor
-
+import logging
 
 class MyVisitor(javaSimplesVisitor):
     def __init__(self, nome_do_programa):
         self.nome_do_programa = nome_do_programa
         self.jasmin_code = ""
         self.variablesTable = {}
+        self.dict_variavel_valor = {}
+        logging.basicConfig(level = logging.INFO)
         self.stack = [1]
         self.palavras_reservadas = javaSimplesLexer.literalNames  # Variáveis não podem usar esses nomes
-
     def save_jasmin_code(self):
         with open(self.nome_do_programa, "w") as file:
             file.write(self.jasmin_code)
@@ -143,7 +144,7 @@ class MyVisitor(javaSimplesVisitor):
     #### Minhas Notas: Rever os returns, descobrir o que é pra retornar pras funções
     # Vendo todas as declarações de variaveis e constantes do codigo
     def visitDeclaracoes(self, ctx: javaSimplesParser.DeclaracoesContext):
-        print("Iniciando Declarações...")
+        logging.debug("Iniciando Declarações...")
         temp_jasmin_code = ""
         temp_jasmin_code += f"\t; inicio das declaracoes\n"
         for declaracao in ctx.decl_de_var():
@@ -156,7 +157,7 @@ class MyVisitor(javaSimplesVisitor):
 
     # Visit a parse tree produced by javaSimplesParser#decl_de_var.
     def visitDecl_de_var(self, ctx: javaSimplesParser.Decl_de_varContext):
-        print("Declarando Variaveis...")
+        logging.debug("Declarando Variaveis...")
         variable_names = ctx.lista_de_var().IDENTIFICADOR()
         data_type = ctx.TIPO().getText()
         temp_jasmin_code = ""
@@ -185,32 +186,32 @@ class MyVisitor(javaSimplesVisitor):
 
     # Visit a parse tree produced by javaSimplesParser#decl_de_var_const.
     def visitDecl_de_const(self, ctx: javaSimplesParser.Decl_de_constContext):
-        print("Declarando Constantes...")
+        logging.debug("Declarando Constantes...")
         constant_names = ctx.IDENTIFICADOR()
         constants = ctx.VALOR_INT()
         if constants:
             for i in range(0, len(constant_names)):
                 self.variablesTable[constant_names[i].getText()] = constants[i].getText()
-                print(f"\tCriando Constante-> {constant_names[i]} : {constants[i].getText()}")
+                logging.debug(f"\tCriando Constante-> {constant_names[i]} : {constants[i].getText()}")
         constants = ctx.VALOR_FLOAT()
         if constants:
             for i in range(0, len(constant_names)):
                 self.variablesTable[constant_names[i].getText()] = constants[i].getText()
-                print(f"\tCriando Constante-> {constant_names[i]} : {constants[i].getText()}")
+                logging.debug(f"\tCriando Constante-> {constant_names[i]} : {constants[i].getText()}")
         constants = ctx.VALOR_STR()
         if constants:
             for i in range(0, len(constant_names)):
                 self.variablesTable[constant_names[i].getText()] = constants[i].getText()
-                print(f"\tCriando Constante-> {constant_names[i]} : {constants[i].getText()}")
+                logging.debug(f"\tCriando Constante-> {constant_names[i]} : {constants[i].getText()}")
         constants = ctx.VALOR_BOOL()
         if constants:
             for i in range(0, len(constant_names)):
                 self.variablesTable[constant_names[i].getText()] = constants[i].getText()
-                print(f"\tCriando Constante-> {constant_names[i]} : {constants[i].getText()}")
+                logging.debug(f"\tCriando Constante-> {constant_names[i]} : {constants[i].getText()}")
 
     # Visit a parse tree produced by javaSimplesParser#expressao.
     def visitExpressao(self, ctx: javaSimplesParser.ExpressaoContext):
-        print("realizando expressão...")
+        logging.debug("realizando expressão...")
         temp_jasmin_code = ""
         tipo_expressao = None
         if ctx.expr_aritimetica():
@@ -229,7 +230,7 @@ class MyVisitor(javaSimplesVisitor):
 
     # Visit a parse tree produced by javaSimplesParser#expr_aritimetica.
     def visitExpr_aritimetica(self, ctx: javaSimplesParser.Expr_aritimeticaContext):
-        print("realizando expressão aritimetica...")
+        logging.debug("realizando expressão aritimetica...")
         temp_jasmin_code = ""
         if ctx.OPERADOR_ARIT_LVL_2() is not None:
             operador = ctx.OPERADOR_ARIT_LVL_2().getText()
@@ -285,7 +286,7 @@ class MyVisitor(javaSimplesVisitor):
 
     # Visit a parse tree produced by javaSimplesParser#termo_aritimetico.
     def visitTermo_aritimetico(self, ctx: javaSimplesParser.Termo_aritimeticoContext):
-        print("carregando valor...")
+        logging.debug("carregando valor...")
         temp_jasmin_code = ""
         if ctx.IDENTIFICADOR() is not None:
             identificador = ctx.IDENTIFICADOR().getText()
@@ -308,7 +309,7 @@ class MyVisitor(javaSimplesVisitor):
 
     # Visit a parse tree produced by javaSimplesParser#expr_relacional.
     def visitExpr_relacional(self, ctx: javaSimplesParser.Expr_relacionalContext):
-        print("realizando expressão relacional...")
+        logging.debug("realizando expressão relacional...")
         temp_jasmin_code = ""
         if ctx.OPERADOR_RELACIONAL_LVL_2() is not None:
             operador = ctx.OPERADOR_RELACIONAL_LVL_2().getText()
@@ -371,7 +372,7 @@ class MyVisitor(javaSimplesVisitor):
 
     # Visit a parse tree produced by javaSimplesParser#termo_relacional.
     def visitTermo_relacional(self, ctx: javaSimplesParser.Termo_relacionalContext):
-        print("carregando valor booleano...")
+        logging.debug("carregando valor booleano...")
         temp_jasmin_code = ""
 
         if ctx.IDENTIFICADOR() is not None:
@@ -428,7 +429,52 @@ class MyVisitor(javaSimplesVisitor):
     # Visit a parse tree produced by javaSimplesParser#comando_atrib.
     def visitComando_atrib(self, ctx: javaSimplesParser.Comando_atribContext):
         self.jasmin_code += "; Comando atrib\n"
+        identificador = ctx.IDENTIFICADOR()
+        pos_na_memoria = self.variablesTable[identificador.getText()][0]
+        tipo = self.variablesTable[identificador.getText()][1]
+        valor = self.resolver_expressao(ctx.expressao())
+        print(valor)
+        #print(self.teste)
+        # self.jasmin_code += f"ldc {valor}"
+        '''
+        if tipo == "int":
+            self.jasmin_code += f"istore {pos_na_memoria}"
+
+        elif tipo == "str":
+            self.jasmin_code += f"astore {pos_na_memoria}"
+
+        elif tipo == "float":
+            self.jasmin_code += f"fstore {pos_na_memoria}"
+
+        elif tipo == "bool":
+            self.jasmin_code += f"istore {pos_na_memoria}"
+            '''
         return self.visitChildren(ctx)
+
+    def resolver_expressao(self, ctx):
+        logging.debug("realizando expressão...")
+        print(ctx.getText())
+        if ctx.expr_aritimetica():
+            print(ctx.expr_aritimetica().getText())
+            resultado = eval(ctx.expr_aritimetica().getText())
+        elif ctx.expr_relacional():
+            resultado = eval(ctx.expr_relacional().getText())
+        elif ctx.VALOR_STR():
+            resultado = ctx.VALOR_STR().getText()
+        elif ctx.chamada_funcao():
+            #resultado = self.visitChamada_funcao(ctx.chamada_funcao())
+            pass
+
+        return resultado
+
+    def substituir_valores(self, expressao):
+        expressao = expressao.split()
+        for i in range(len(expressao)):
+            token = expressao[i]
+
+            if token in self.variablesTable:
+                expressao[i] = self.variablesTable[token]
+
 
     # Visit a parse tree produced by javaSimplesParser#comando_print.
     def visitComando_print(self, ctx: javaSimplesParser.Comando_printContext):
