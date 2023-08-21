@@ -1,5 +1,13 @@
+soma(int x, int y): int
+var:
+    a, b : int;
+return x + y;
+end
 main:
 var:
 x, y : int;
-x = x + 1;
+a, b : float;
+p : bool;
+const Carlos = 420;
+p = y >= 4;
 end

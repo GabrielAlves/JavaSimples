@@ -1,0 +1,10 @@
+main:
+	var:
+		x : int;
+	x = 2;
+end
+
+
+
+
+

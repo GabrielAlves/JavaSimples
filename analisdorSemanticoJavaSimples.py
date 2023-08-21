@@ -6,8 +6,9 @@ import logging
 
 
 class MyVisitor(javaSimplesVisitor):
-    def __init__(self, nome_do_programa):
-        self.nome_do_programa = nome_do_programa
+    def __init__(self, path_do_programa):
+        self.nome_do_programa = path_do_programa.split('/')[-1]
+        self.path_do_programa = path_do_programa
         self.jasmin_code = ""
         self.variablesTable = {}
         self.dict_variavel_valor = {}
@@ -16,9 +17,27 @@ class MyVisitor(javaSimplesVisitor):
         self.higher_stack_size = 1
         self.palavras_reservadas = javaSimplesLexer.literalNames  # Variáveis não podem usar esses nomes
 
+    def executar(self):
+        input_stream = FileStream(self.path_do_programa)
+        # Criar o lexer
+        lexer = javaSimplesLexer(input_stream)
+
+        # Criar o stream de tokens
+        token_stream = CommonTokenStream(lexer)
+
+        # Criar o parser
+        parser = javaSimplesParser(token_stream)
+
+        # Obter a árvore de análise sintática
+        tree = parser.programa()
+
+        # Visitar a árvore de análise sintática
+        self.visit(tree)
+
     def save_jasmin_code(self):
-        with open(self.nome_do_programa, "w") as file:
+        with open(self.nome_do_programa.split('.')[0] + ".j", "w") as file:
             file.write(self.jasmin_code)
+            return file.name
 
     def atualiza_pilha(self, operacao):
         if operacao == "pop":
@@ -56,8 +75,8 @@ class MyVisitor(javaSimplesVisitor):
     #################################################################
     # Visit a parse tree produced by javaSimplesParser#programa.
     def visitPrograma(self, ctx: javaSimplesParser.ProgramaContext):
-        logging.debug("Iniciando analise do codigo...")
-        self.jasmin_code += f".class public {self.nome_do_programa}\n"
+        print("Iniciando analise do codigo...")
+        self.jasmin_code += f".class public {self.nome_do_programa.split('.')[0]}\n"
         self.jasmin_code += f".super java/lang/Object\n\n"
         return self.visitChildren(ctx)
 
@@ -78,7 +97,7 @@ class MyVisitor(javaSimplesVisitor):
         self.jasmin_code += f"\t.limit locals {n_variaveis}\n"
         self.jasmin_code += decl_jasmin_code
         self.jasmin_code += comando_jasmin_code
-        self.jasmin_code += f".end method"
+        self.jasmin_code += f".end method\n"
         self.variablesTable = {}
         self.stack = [1]
         self.higher_stack_size = 1
@@ -103,7 +122,7 @@ class MyVisitor(javaSimplesVisitor):
         self.jasmin_code += f"\t.limit locals {n_variaveis}\n"
         self.jasmin_code += decl_jasmin_code
         self.jasmin_code += comando_jasmin_code
-        self.jasmin_code += f".end method\n"
+        self.jasmin_code += f".end method\n\n"
 
         logging.debug("Terminando a declaração de função...")
         self.variablesTable = {}
@@ -493,27 +512,3 @@ class MyVisitor(javaSimplesVisitor):
     def visitChamada_funcao(self, ctx: javaSimplesParser.Chamada_funcaoContext):
         self.jasmin_code += "; Comando funcao\n"
         return self.visitChildren(ctx)
-
-
-if __name__ == '__main__':
-    # Ler o arquivo de entrada
-    input_stream = FileStream('./testes_entrada/funcao_testes_do_daniel.txt')
-    # print(input_stream)
-    # Criar o lexer
-    lexer = javaSimplesLexer(input_stream)
-
-    # Criar o stream de tokens
-    token_stream = CommonTokenStream(lexer)
-
-    # Criar o parser
-    parser = javaSimplesParser(token_stream)
-
-    # Obter a árvore de análise sintática
-    tree = parser.programa()
-
-    # Criar o visitor
-    visitor = MyVisitor("Output.j")
-
-    # Visitar a árvore de análise sintática
-    visitor.visit(tree)
-    visitor.save_jasmin_code()

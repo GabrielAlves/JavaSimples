@@ -1,18 +1,14 @@
-.class public Output.j
+.class public teste
 .super java/lang/Object
 
 .method public static main([Ljava/lang/String;)V
-	.limit stack 3
-	.limit locals 2
+	.limit stack 2
+	.limit locals 1
 	; inicio das declaracoes
 	ldc 0
 	istore 0
-	ldc 0
-	istore 1
 	; fim das declaracoes
 	; Comando atrib
-	iload 0
-	ldc 1
-	iadd
+	ldc 2
 	istore 0
 .end method
