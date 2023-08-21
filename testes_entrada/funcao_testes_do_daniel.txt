@@ -1,6 +1,6 @@
-/*soma(int x, int y): int
+soma(int x, int y): int
 return x + y;
-end*/
+end
 main:
 var:
 x, y : int;

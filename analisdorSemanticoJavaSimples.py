@@ -51,7 +51,7 @@ class MyVisitor(javaSimplesVisitor):
     # Visit a parse tree produced by javaSimplesParser#funcao_main.
     def visitFuncao_main(self, ctx: javaSimplesParser.Funcao_mainContext):
         print("Criando a Main...")
-        n_variaveis = 0
+        n_variaveis = 1
         decl_jasmin_code = ""
         self.jasmin_code += f".method public static main([Ljava/lang/String;)V\n"
         if ctx.declaracoes():
@@ -69,31 +69,25 @@ class MyVisitor(javaSimplesVisitor):
     # Visit a parse tree produced by javaSimplesParser#dec_de_func.
     def visitDec_de_func(self, ctx: javaSimplesParser.Dec_de_funcContext):
         print("Começando a declaração de função...")
+        n_variaveis = 1
+        decl_jasmin_code = ""
+        comando_jasmin_code = ""
         cabc_da_funcao = self.visitCabecalho_de_func(ctx.cabecalho_de_func())
         if ctx.declaracoes():
-            declaracoes = self.visitDeclaracoes(ctx.declaracoes())
-        comandos = self.visitComando(ctx.comando())
-        temp_jasmin_code = ""
+            decl_jasmin_code = self.visitDeclaracoes(ctx.declaracoes())
+            n_variaveis = self.conta_variaveis()
+        if ctx.comando():
+            # comando_jasmin_code = self.visitComando(ctx.comando())
+            self.visitComando(ctx.comando())
 
-        if comandos:
-            temp_jasmin_code += f"{cabc_da_funcao}\n"
-            for variaveis in declaracoes:
-                variaveis += declaracoes
-                temp_jasmin_code += f"{variaveis}\n"
-            for comand in comandos:
-                comand += comandos
-                temp_jasmin_code += f"{comand}\n"
-            temp_jasmin_code += f".end method"
-        else:
-            temp_jasmin_code += f"{cabc_da_funcao}\n"
-            for comand in comandos:
-                comand += comandos
-                temp_jasmin_code += f"{comand}\n"
-            temp_jasmin_code += f".end method"
+        self.jasmin_code += cabc_da_funcao
+        self.jasmin_code += f"\t.limit stack {len(self.stack)}\n"
+        self.jasmin_code += f"\t.limit locals {n_variaveis}\n"
+        self.jasmin_code += decl_jasmin_code
+        self.jasmin_code += comando_jasmin_code
+        self.jasmin_code += f".end method\n"
 
         print("Terminando a declaração de função...")
-
-        return temp_jasmin_code
 
     # Visit a parse tree produced by javaSimplesParser#cabecalho_de_func.
     def visitCabecalho_de_func(self, ctx: javaSimplesParser.Cabecalho_de_funcContext):
@@ -102,16 +96,15 @@ class MyVisitor(javaSimplesVisitor):
         temp_jasmin_code = ""
 
         if ctx.TIPO().getText() == "int":
-            temp_jasmin_code += f".method public static {nome_funcao}({parametros_da_funcao})I"
+            temp_jasmin_code += f".method public static {nome_funcao}({parametros_da_funcao})I\n"
         elif ctx.TIPO().getText() == "float":
-            temp_jasmin_code += f".method public static {nome_funcao}({parametros_da_funcao})F"
+            temp_jasmin_code += f".method public static {nome_funcao}({parametros_da_funcao})F\n"
         elif ctx.TIPO().getText() == "str":
-            temp_jasmin_code += f".method public static {nome_funcao}({parametros_da_funcao})Ljava/lang/String"
+            temp_jasmin_code += f".method public static {nome_funcao}({parametros_da_funcao})Ljava/lang/String\n"
         elif ctx.TIPO().getText() == "bool":
-            temp_jasmin_code += f".method public static {nome_funcao}({parametros_da_funcao})I"
+            temp_jasmin_code += f".method public static {nome_funcao}({parametros_da_funcao})I\n"
         else:
-            temp_jasmin_code += f".method public static {nome_funcao}({parametros_da_funcao})V"
-        self.jasmin_code += temp_jasmin_code
+            temp_jasmin_code += f".method public static {nome_funcao}({parametros_da_funcao})V\n"
 
         return temp_jasmin_code
 
@@ -121,8 +114,6 @@ class MyVisitor(javaSimplesVisitor):
 
         for parametro in ctx.parametro():
             temp_jasmin_code += self.visitParametro(parametro)
-
-        self.jasmin_code += temp_jasmin_code
 
         return temp_jasmin_code
 
@@ -138,8 +129,6 @@ class MyVisitor(javaSimplesVisitor):
             temp_jasmin_code += f"Ljava/lang/String"
         elif ctx.TIPO().getText() == "bool":
             temp_jasmin_code += f"I"
-
-        self.jasmin_code += temp_jasmin_code
 
         return temp_jasmin_code
 
@@ -159,7 +148,7 @@ class MyVisitor(javaSimplesVisitor):
 
         temp_jasmin_code += f"\t; fim das declaracoes\n"
         ############################ Debug
-        #self.jasmin_code = temp_jasmin_code
+        # self.jasmin_code = temp_jasmin_code
         return temp_jasmin_code
 
     # Visit a parse tree produced by javaSimplesParser#decl_de_var.

@@ -1,6 +1,10 @@
 .class public Output.j
 .super java/lang/Object
 
+.method public static soma(II)I
+	.limit stack 1
+	.limit locals 1
+.end method
 .method public static main([Ljava/lang/String;)V
 	.limit stack 1
 	.limit locals 5
