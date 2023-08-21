@@ -11,6 +11,10 @@ ldc 0
 istore 4
 ; fim das declaracoes
 ; Comando atrib
+; Comando atrib
+iload 1
+ldc 4
+if_icmpge ;implementar labels
 iload 1
 ldc 4
 if_icmpge ;implementar labels
