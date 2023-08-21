@@ -1,13 +1,5 @@
-soma(int x, int y): int
-var:
-    x, y : int;
-return x + y;
-end
 main:
 var:
 x, y : int;
-a, b : float;
-p : bool;
-const Carlos = 420;
-x = y >= 4;
+x = x + 1;
 end
