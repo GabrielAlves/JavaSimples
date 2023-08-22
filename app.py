@@ -36,7 +36,7 @@ class GUIApp:
         # Carrega o último arquivo aberto
         self.code_text.insert('1.0', self.load_last_file())
 
-        self.run_button = tk.Button(root, text="Run Code", command=self.run_code)
+        self.run_button = tk.Button(root, text="Compile Code", command=self.run_code)
         self.run_button.pack()
 
         self.output_text = scrolledtext.ScrolledText(root, wrap=tk.WORD, state=tk.DISABLED, width=40, height=10,

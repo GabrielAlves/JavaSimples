@@ -11,7 +11,6 @@ VALOR_STR : '"' ( ~[\\\r\n\f"] )* '"'
 VALOR_BOOL : 'true'
            | 'false';
 
-OPERADOR_UNARIO_ARIT: '-';
 OPERADOR_UNARIO_RELACIONAL: '!';
 
 OPERADOR_ARIT_LVL_1: '+'

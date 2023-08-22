@@ -1,8 +1,50 @@
+soma(int x, int y): int
+	x = x + y;
+	return x;
+end
 main:
 var:
 x, y : int;
-p : bool;
-const Carlos = 420;
-x = 420;
-print("alo");
+x = soma(x + 1, y);
+print(x);
 end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

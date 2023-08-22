@@ -27,10 +27,11 @@ expressao: expr_aritimetica | expr_relacional | VALOR_STR | chamada_funcao;
 /* Expressões Aritimeticas  */
 expr_aritimetica: expr_aritimetica OPERADOR_ARIT_LVL_2 expr_aritimetica
     | expr_aritimetica OPERADOR_ARIT_LVL_1 expr_aritimetica
-    | OPERADOR_UNARIO_ARIT? termo_aritimetico;
+    | OPERADOR_ARIT_LVL_1? termo_aritimetico;
 termo_aritimetico:IDENTIFICADOR
     | (VALOR_INT | VALOR_FLOAT)
-    | '(' expr_aritimetica ')';
+    | '(' expr_aritimetica ')'
+    | chamada_funcao;
 /* Expressões Booleanas */
 expr_relacional: OPERADOR_UNARIO_RELACIONAL? termo_relacional OPERADOR_RELACIONAL_LVL_2 OPERADOR_UNARIO_RELACIONAL? termo_relacional
     | OPERADOR_UNARIO_RELACIONAL? termo_relacional OPERADOR_RELACIONAL_LVL_1 OPERADOR_UNARIO_RELACIONAL? termo_relacional

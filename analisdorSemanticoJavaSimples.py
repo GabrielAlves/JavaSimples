@@ -205,31 +205,38 @@ end:\n\
     # Visit a parse tree produced by javaSimplesParser#cabecalho_de_func.
     def visitCabecalho_de_func(self, ctx: javaSimplesParser.Cabecalho_de_funcContext):
         nome_funcao = ctx.IDENTIFICADOR().getText()
-        parametros_da_funcao = self.visitLista_de_parametros(ctx.lista_de_parametros())
+        tipos, parametros_da_funcao = self.visitLista_de_parametros(ctx.lista_de_parametros())
         temp_jasmin_code = ""
+        tipo_da_funcao = ""
 
-        if ctx.TIPO().getText() == "int":
+        if ctx.TIPO():
+            tipo_da_funcao = ctx.TIPO().getText()
+        if tipo_da_funcao == "int":
             temp_jasmin_code += f".method public static {nome_funcao}({parametros_da_funcao})I\n"
-        elif ctx.TIPO().getText() == "float":
+        elif tipo_da_funcao == "float":
             temp_jasmin_code += f".method public static {nome_funcao}({parametros_da_funcao})F\n"
-        elif ctx.TIPO().getText() == "str":
+        elif tipo_da_funcao == "str":
             temp_jasmin_code += f".method public static {nome_funcao}({parametros_da_funcao})Ljava/lang/String\n"
-        elif ctx.TIPO().getText() == "bool":
+        elif tipo_da_funcao == "bool":
             temp_jasmin_code += f".method public static {nome_funcao}({parametros_da_funcao})I\n"
         else:
             temp_jasmin_code += f".method public static {nome_funcao}({parametros_da_funcao})V\n"
+            tipo_da_funcao = "void"
 
-        self.functionsTable[nome_funcao] = ctx.TIPO().getText()
+        self.functionsTable[nome_funcao] = (tipo_da_funcao, tipos)
         return temp_jasmin_code
 
     # Visit a parse tree produced by javaSimplesParser#lista_de_parametros.
     def visitLista_de_parametros(self, ctx: javaSimplesParser.Lista_de_parametrosContext):
         temp_jasmin_code = ""
+        tipos = []
         print("Recebendo Parametros...")
         for parametro in ctx.parametro():
-            temp_jasmin_code += self.visitParametro(parametro)
+            tipo, param_jasmin_code = self.visitParametro(parametro)
+            temp_jasmin_code += param_jasmin_code
+            tipos.append(tipo)
 
-        return temp_jasmin_code
+        return tipos, temp_jasmin_code
 
     # Visit a parse tree produced by javaSimplesParser#parametro.
     def visitParametro(self, ctx: javaSimplesParser.ParametroContext):
@@ -245,7 +252,7 @@ end:\n\
             temp_jasmin_code += f"I"
         print(f"\tParametro -> {ctx.IDENTIFICADOR().getText()} do tipo {tipo}")
         self.variablesTable[ctx.IDENTIFICADOR().getText()] = (len(self.variablesTable), tipo)
-        return temp_jasmin_code
+        return tipo, temp_jasmin_code
 
     #################################################################
     ######                     Daniel                          ######
@@ -332,14 +339,15 @@ end:\n\
             self.atualiza_pilha("append")
             tipo_expressao = "str"
         elif ctx.chamada_funcao():
-            tipo_expressao, temp_jasmin_code = self.visitChamada_funcao(ctx.chamada_funcao())
+            temp_jasmin_code = self.visitChamada_funcao(ctx.chamada_funcao())
+            tipo_expressao = self.functionsTable[ctx.chamada_funcao().IDENTIFICADOR.getText()][0]
         return tipo_expressao, temp_jasmin_code
 
     # Visit a parse tree produced by javaSimplesParser#expr_aritimetica.
     def visitExpr_aritimetica(self, ctx: javaSimplesParser.Expr_aritimeticaContext):
         print("realizando expressão aritimetica...")
         temp_jasmin_code = ""
-        if ctx.OPERADOR_ARIT_LVL_2() is not None:
+        if ctx.expr_aritimetica() is not None and ctx.OPERADOR_ARIT_LVL_2() is not None:
             operador = ctx.OPERADOR_ARIT_LVL_2().getText()
             tipo_operando_esq, op_esq_jasmin_code = self.visitExpr_aritimetica(ctx.getChild(0))
             tipo_operando_dir, op_dir_jasmin_code = self.visitExpr_aritimetica(ctx.getChild(2))
@@ -405,7 +413,7 @@ end:\n\
                     temp_jasmin_code += "\tidiv\n"
                     self.atualiza_pilha("pop")
                     return "int", temp_jasmin_code
-        elif ctx.OPERADOR_ARIT_LVL_1() is not None:
+        elif ctx.expr_aritimetica() is not None and ctx.OPERADOR_ARIT_LVL_1() is not None:
             operador = ctx.OPERADOR_ARIT_LVL_1().getText()
             tipo_operando_esq, op_esq_jasmin_code = self.visitExpr_aritimetica(ctx.getChild(0))
             tipo_operando_dir, op_dir_jasmin_code = self.visitExpr_aritimetica(ctx.getChild(2))
@@ -472,6 +480,14 @@ end:\n\
                     temp_jasmin_code += "\tisub\n"
                     self.atualiza_pilha("pop")
                     return "int", temp_jasmin_code
+        elif ctx.OPERADOR_ARIT_LVL_1() is not None and ctx.OPERADOR_ARIT_LVL_1().getText() == "-":
+            tipo, termo_jasmin_code = self.visitTermo_aritimetico(ctx.termo_aritimetico())
+            temp_jasmin_code += termo_jasmin_code
+            if tipo == "int":
+                temp_jasmin_code += "\tineg\n"
+            else:
+                temp_jasmin_code += "\tfneg\n"
+            return tipo, temp_jasmin_code
         else:
             return self.visitTermo_aritimetico(ctx.termo_aritimetico())
 
@@ -498,8 +514,11 @@ end:\n\
             temp_jasmin_code += f"\tldc {valor}\n"
             self.atualiza_pilha("append")
             return "float", temp_jasmin_code
+        elif ctx.chamada_funcao() is not None:
+            temp_jasmin_code = self.visitChamada_funcao(ctx.chamada_funcao())
+            tipo_funcao = self.functionsTable[ctx.chamada_funcao().IDENTIFICADOR().getText()][0]
+            return tipo_funcao, temp_jasmin_code
         else:  # Jasmin to do
-            print("não é porra nenhuma")
             expr = self.visitExpr_aritimetica(ctx.expr_aritimetica())
             return expr
 
@@ -604,7 +623,10 @@ end:\n\
     #################################################################
     # Visit a parse tree produced by javaSimplesParser#comando.
     def visitComando(self, ctx: javaSimplesParser.ComandoContext):
-        return self.visitChildren(ctx)
+        if ctx.chamada_funcao():
+            return self.visitChamada_funcao(ctx.chamada_funcao())
+        else:
+            return self.visitChildren(ctx)
 
     # Visit a parse tree produced by javaSimplesParser#comando_if.
     def visitComando_if(self, ctx: javaSimplesParser.Comando_ifContext):
@@ -651,8 +673,8 @@ end:\n\
 
     # Visit a parse tree produced by javaSimplesParser#comando_scanf.
     def visitComando_scanf(self, ctx: javaSimplesParser.Comando_scanfContext):
+        print("Carregando scanner...")
         temp_jasmin_code = "; Comando scanf\n"
-
         for identificador in ctx.lista_de_var().IDENTIFICADOR():
             identificador = identificador.getText()
             if identificador not in self.variablesTable:
@@ -660,7 +682,6 @@ end:\n\
 
             pos_na_memoria = self.variablesTable[identificador][0]
             tipo_da_variavel = self.variablesTable[identificador][1]
-
             if tipo_da_variavel == "int":
                 temp_jasmin_code += f"\tinvokestatic {self.nome_do_programa.split('.')[0]}/lerInteiro()I\n"
                 temp_jasmin_code += f"\tistore {pos_na_memoria}\n"
@@ -670,19 +691,19 @@ end:\n\
                 temp_jasmin_code += f"\tfstore {pos_na_memoria}\n"
 
             elif tipo_da_variavel == "bool":
-                temp_jasmin_code += f"\tinvokestatic {self.nome_do_programa.split('.')[0]}/readFloat()F\n"
+                temp_jasmin_code += f"\tinvokestatic {self.nome_do_programa.split('.')[0]}/readBoolean()I\n"
                 temp_jasmin_code += f"\tfstore {pos_na_memoria}\n"
 
             elif tipo_da_variavel == "str":
                 temp_jasmin_code += f"\tinvokestatic {self.nome_do_programa.split('.')[0]}/readString()" \
                                     f"Ljava/lang/String;\n "
                 temp_jasmin_code += f"\tastore {pos_na_memoria}\n"
-
         return temp_jasmin_code
 
     # Visit a parse tree produced by javaSimplesParser#comando_atrib.
     def visitComando_atrib(self, ctx: javaSimplesParser.Comando_atribContext):
         temp_jasmin_code = "\t; Comando atrib\n"
+        print("Atribuindo valores...")
         identificador = ctx.IDENTIFICADOR()
         pos_na_memoria = self.variablesTable[identificador.getText()][0]
         tipo_da_variavel = self.variablesTable[identificador.getText()][1]
@@ -704,9 +725,14 @@ end:\n\
             elif tipo_da_variavel == "bool":
                 temp_jasmin_code += f"\tistore {pos_na_memoria}\n"
                 self.stack.pop()
+        elif tipo_da_variavel == "float" and tipo_da_expressao == "int":
+            temp_jasmin_code += codigo_da_expr
+            temp_jasmin_code += f"\ti2f\n"
+            temp_jasmin_code += f"\tfstore {pos_na_memoria}\n"
+            self.stack.pop()
         else:
             linha = ctx.start.line
-            raise Erro(f"Erro: na linha: {linha}, tipos incompativeis")
+            raise Erro(f"Erro: na linha: {linha}, tipos incompativeis, esperava um {tipo_da_variavel}, recebido {tipo_da_expressao}")
         return temp_jasmin_code
 
     # Visit a parse tree produced by javaSimplesParser#comando_print.
@@ -762,21 +788,32 @@ end:\n\
     # Visit a parse tree produced by javaSimplesParser#chamada_funcao.
     def visitChamada_funcao(self, ctx: javaSimplesParser.Chamada_funcaoContext):
         temp_jasmin_code = "; Comando funcao\n"
+        print("Preparando chamada de função...")
+        parametros = ""
+        # carregando os parametros
         if ctx.lista_de_var():
             variable_names = ctx.lista_de_var().IDENTIFICADOR()
-            for variable_name in variable_names:
+            expected_variable_types = self.functionsTable[ctx.IDENTIFICADOR().getText()][1]
+            for variable_name, tipo_do_parametro_esperado in zip(variable_names, expected_variable_types):
                 if variable_name.getText() in self.variablesTable:
-                    variable = self.variablesTable[variable_name][0]
-                    data_type = self.variablesTable[variable_name][1]
-                    tipo_do_parametro_esperado = self.functionsTable[ctx.IDENTIFICADOR().getText()]
+                    variable = self.variablesTable[variable_name.getText()][0]
+                    data_type = self.variablesTable[variable_name.getText()][1]
                     if data_type == "int" and data_type == tipo_do_parametro_esperado:
                         temp_jasmin_code += f"\tiload {variable}\n"
+                        parametros += "I"
+                        self.atualiza_pilha("append")
                     elif data_type == "float" and data_type == tipo_do_parametro_esperado:
                         temp_jasmin_code += f"\tfload {variable}\n"
+                        parametros += "F"
+                        self.atualiza_pilha("append")
                     elif data_type == "str" and data_type == tipo_do_parametro_esperado:
                         temp_jasmin_code += f'\taload {variable}\n'
+                        parametros += "Ljava/lang/String"
+                        self.atualiza_pilha("append")
                     elif data_type == "bool" and data_type == tipo_do_parametro_esperado:
                         temp_jasmin_code += f'\tiload {variable}\n'
+                        parametros += "I"
+                        self.atualiza_pilha("append")
                     else:
                         linha = ctx.start.line
                         raise Erro(
@@ -786,16 +823,36 @@ end:\n\
                     linha = ctx.start.line
                     raise Erro(f"Erro na linha {linha}: variavel {variable_name} não declarada")
         elif ctx.lista_de_expressoes():
-            expressoes = ctx.lista_de_expressoes().expressoes()
-            for expressao in expressoes:
+            expressoes = ctx.lista_de_expressoes().expressao()
+            expected_param_types = self.functionsTable[ctx.IDENTIFICADOR().getText()][1]
+            for expressao, tipo_do_parametro_esperado in zip(expressoes, expected_param_types):
                 tipo, expr_code = self.visitExpressao(expressao)
-                tipo_do_parametro_esperado = self.functionsTable[ctx.IDENTIFICADOR().getText()]
+                print(tipo, tipo_do_parametro_esperado)
                 if tipo == tipo_do_parametro_esperado:
                     temp_jasmin_code += expr_code
+                if tipo == "int":
+                    parametros += "I"
+                elif tipo == "float":
+                    parametros += "F"
+                elif tipo == "str":
+                    parametros += "Ljava/lang/String"
+                elif tipo == "bool":
+                    parametros += "I"
                 else:
                     linha = ctx.start.line
                     raise Erro(
                         f"Erro na linha {linha}: parametro recebido é do tipo {tipo},\
                          era esperado tipo {tipo_do_parametro_esperado}")
+        # Chamando a função em si
+        tipo_de_retorno = self.functionsTable[ctx.IDENTIFICADOR().getText()][0]
+        print()
+        if tipo_de_retorno == "int":
+            temp_jasmin_code += f"\tinvokestatic {self.nome_do_programa.split('.')[0]}/{ctx.IDENTIFICADOR().getText()}({parametros})I\n"
+        elif tipo_de_retorno == "float":
+            temp_jasmin_code += f"\tinvokestatic {self.nome_do_programa.split('.')[0]}/{ctx.IDENTIFICADOR().getText()}({parametros})F\n"
+        elif tipo_de_retorno == "\tstr":
+            temp_jasmin_code += f"\tinvokestatic {self.nome_do_programa.split('.')[0]}/{ctx.IDENTIFICADOR().getText()}({parametros})Ljava/lang/String\n"
+        else:
+            temp_jasmin_code += f"\tinvokestatic {self.nome_do_programa.split('.')[0]}/{ctx.IDENTIFICADOR().getText()}({parametros})I\n"
 
         return temp_jasmin_code
