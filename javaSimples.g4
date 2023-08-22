@@ -49,7 +49,8 @@ comando: comando_if
        | comando_break
        | chamada_funcao ';';
 
-comando_if: 'if' '(' expr_relacional ')' ':' comando* ('else' ':' comando*)? 'end';
+comando_if: 'if' '(' expr_relacional ')' ':' comando* (comando_else)? 'end';
+comando_else: 'else' ':' comando*;
 comando_while: 'while' '(' expr_relacional ')' ':' (comando)+ 'end';
 comando_scanf: 'scanf' '(' lista_de_var ')' ';';
 comando_atrib : IDENTIFICADOR '=' expressao ';';

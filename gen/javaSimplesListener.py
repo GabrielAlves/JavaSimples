@@ -170,6 +170,15 @@ class javaSimplesListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by javaSimplesParser#comando_else.
+    def enterComando_else(self, ctx:javaSimplesParser.Comando_elseContext):
+        pass
+
+    # Exit a parse tree produced by javaSimplesParser#comando_else.
+    def exitComando_else(self, ctx:javaSimplesParser.Comando_elseContext):
+        pass
+
+
     # Enter a parse tree produced by javaSimplesParser#comando_while.
     def enterComando_while(self, ctx:javaSimplesParser.Comando_whileContext):
         pass

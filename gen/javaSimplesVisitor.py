@@ -99,6 +99,11 @@ class javaSimplesVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by javaSimplesParser#comando_else.
+    def visitComando_else(self, ctx:javaSimplesParser.Comando_elseContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by javaSimplesParser#comando_while.
     def visitComando_while(self, ctx:javaSimplesParser.Comando_whileContext):
         return self.visitChildren(ctx)

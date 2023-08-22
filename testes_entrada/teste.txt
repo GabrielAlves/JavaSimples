@@ -1,8 +1,37 @@
 main:
 	var:
 		x : int;
-	x = 2;
+	scanf(x);
+	print(x);
 end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
