@@ -1,77 +1,13 @@
-.class public funcao_prof
+.class public testes
 .super java/lang/Object
 
-.method public static fatorial(I)I
-	.limit stack 5
-	.limit locals 1
-; Comando if
-	iload 0
-	ldc 1
-	if_icmple loop0
-	; Comando print
-	getstatic java/lang/System/out Ljava/io/PrintStream;
-	iload 0
-	invokevirtual java/io/PrintStream/println(I)V
-	iload 0
-; Comando funcao
-	iload 0
-	ldc 1
-	isub
-	invokestatic funcao_prof/fatorial(I)I
-	imul
-	ireturn
-	goto loop1
-loop0:
-	ldc 1
-	ireturn
-loop1:
-	return
-.end method
-
-.method public static mostrarMedia(II)V
+.method public static soma(II)I
 	.limit stack 3
-	.limit locals 4
-	; inicio das declaracoes
-	ldc 0.0
-	fstore 2
-	ldc 0
-	istore 3
-	; fim das declaracoes
-	; Comando atrib
+	.limit locals 2
 	iload 0
 	iload 1
 	iadd
-	ldc 2
-	idiv
-	i2f
-	fstore 2
-	; Comando print
-	getstatic java/lang/System/out Ljava/io/PrintStream;
-	ldc "Resultado: "
-	invokevirtual java/io/PrintStream/println(Ljava/lang/String;)V
-	getstatic java/lang/System/out Ljava/io/PrintStream;
-	fload 2
-	invokevirtual java/io/PrintStream/println(F)V
-	return
-.end method
-
-.method public static media(FF)F
-	.limit stack 3
-	.limit locals 3
-	; inicio das declaracoes
-	ldc 0.0
-	fstore 2
-	; fim das declaracoes
-	; Comando atrib
-	fload 0
-	fload 1
-	fadd
-	ldc 2
-	i2f
-	fdiv
-	fstore 2
-	fload 2
-	freturn
+	ireturn
 	return
 .end method
 
@@ -127,40 +63,22 @@ end:
 
 .method public static main([Ljava/lang/String;)V
 	.limit stack 3
-	.limit locals 3
+	.limit locals 4
 	; inicio das declaracoes
 	ldc 0
 	istore 0
 	ldc 0
 	istore 1
-	ldc 0
-	istore 2
+	ldc 0.0
+	fstore 2
+	ldc 0.0
+	fstore 3
 	; fim das declaracoes
-	; Comando print
-	getstatic java/lang/System/out Ljava/io/PrintStream;
-	ldc "Programa Fatorial. Digite o valor?"
-	invokevirtual java/io/PrintStream/println(Ljava/lang/String;)V
-; Comando scanf
-	invokestatic funcao_prof/lerInteiro()I
-	istore 0
-	; Comando print
-	getstatic java/lang/System/out Ljava/io/PrintStream;
+	; Comando atrib
 ; Comando funcao
 	iload 0
-	invokestatic funcao_prof/fatorial(I)I
-	invokevirtual java/io/PrintStream/println(I)V
-	; Comando print
-	getstatic java/lang/System/out Ljava/io/PrintStream;
-	ldc "Programa Media. Digite o valores?"
-	invokevirtual java/io/PrintStream/println(Ljava/lang/String;)V
-; Comando scanf
-	invokestatic funcao_prof/lerInteiro()I
-	istore 1
-	invokestatic funcao_prof/lerInteiro()I
-	istore 2
-; Comando funcao
 	iload 1
-	iload 2
-	invokestatic funcao_prof/mostrarMedia(II)V
+	invokestatic testes/soma(II)I
+	istore 0
 	return
 .end method

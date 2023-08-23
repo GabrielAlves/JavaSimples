@@ -146,15 +146,14 @@ end:\n\
     #################################################################
     # Visit a parse tree produced by javaSimplesParser#programa.
     def visitPrograma(self, ctx: javaSimplesParser.ProgramaContext):
-        print("Iniciando analise do codigo...")
+        #print("Iniciando analise do codigo...")
         self.jasmin_code += f".class public {self.nome_do_programa.split('.')[0]}\n"
         self.jasmin_code += f".super java/lang/Object\n\n"
         return self.visitChildren(ctx)
 
     # Visit a parse tree produced by javaSimplesParser#funcao_main.
     def visitFuncao_main(self, ctx: javaSimplesParser.Funcao_mainContext):
-        print("Criando a Main...")
-        n_variaveis = 1
+        #print("Criando a Main...")
         decl_jasmin_code = ""
         comando_jasmin_code = ""
         self.adicionar_funcoes_de_leitura_no_codigo_jasmin()
@@ -178,8 +177,7 @@ end:\n\
 
     # Visit a parse tree produced by javaSimplesParser#dec_de_func.
     def visitDec_de_func(self, ctx: javaSimplesParser.Dec_de_funcContext):
-        print("Começando a declaração de função...")
-        n_variaveis = 1
+        #print("Começando a declaração de função...")
         decl_jasmin_code = ""
         comando_jasmin_code = ""
         cabc_da_funcao = self.visitCabecalho_de_func(ctx.cabecalho_de_func())
@@ -195,9 +193,10 @@ end:\n\
         self.jasmin_code += f"\t.limit locals {n_variaveis}\n"
         self.jasmin_code += decl_jasmin_code
         self.jasmin_code += comando_jasmin_code
+        self.jasmin_code += f"\treturn\n"
         self.jasmin_code += f".end method\n\n"
 
-        print("Terminando a declaração de função...")
+        #print("Terminando a declaração de função...")
         self.variablesTable = {}
         self.stack = [1]
         self.higher_stack_size = 1
@@ -230,7 +229,7 @@ end:\n\
     def visitLista_de_parametros(self, ctx: javaSimplesParser.Lista_de_parametrosContext):
         temp_jasmin_code = ""
         tipos = []
-        print("Recebendo Parametros...")
+        #print("Recebendo Parametros...")
         for parametro in ctx.parametro():
             tipo, param_jasmin_code = self.visitParametro(parametro)
             temp_jasmin_code += param_jasmin_code
@@ -250,7 +249,7 @@ end:\n\
             temp_jasmin_code += f"Ljava/lang/String"
         elif tipo == "bool":
             temp_jasmin_code += f"I"
-        print(f"\tParametro -> {ctx.IDENTIFICADOR().getText()} do tipo {tipo}")
+        #print(f"\tParametro -> {ctx.IDENTIFICADOR().getText()} do tipo {tipo}")
         self.variablesTable[ctx.IDENTIFICADOR().getText()] = (len(self.variablesTable), tipo)
         return tipo, temp_jasmin_code
 
@@ -273,7 +272,7 @@ end:\n\
 
     # Visit a parse tree produced by javaSimplesParser#decl_de_var.
     def visitDecl_de_var(self, ctx: javaSimplesParser.Decl_de_varContext):
-        print("Declarando Variaveis...")
+        #print("Declarando Variaveis...")
         variable_names = ctx.lista_de_var().IDENTIFICADOR()
         data_type = ctx.TIPO().getText()
         temp_jasmin_code = ""
@@ -296,37 +295,37 @@ end:\n\
                 else:
                     temp_jasmin_code += f'\tldc 0\n'
                     temp_jasmin_code += f"\tistore {self.variablesTable[variable_name.getText()][0]}\n"
-                print(f"\tCriando Variavel-> {variable_name.getText()} do Tipo {data_type}")
+                #print(f"\tCriando Variavel-> {variable_name.getText()} do Tipo {data_type}")
         return temp_jasmin_code
 
     # Visit a parse tree produced by javaSimplesParser#decl_de_var_const.
     def visitDecl_de_const(self, ctx: javaSimplesParser.Decl_de_constContext):
-        print("Declarando Constantes...")
+        #print("Declarando Constantes...")
         constant_names = ctx.IDENTIFICADOR()
         constants = ctx.VALOR_INT()
         if constants:
             for i in range(0, len(constant_names)):
                 self.variablesTable[constant_names[i].getText()] = constants[i].getText()
-                print(f"\tCriando Constante-> {constant_names[i]} : {constants[i].getText()}")
+                #print(f"\tCriando Constante-> {constant_names[i]} : {constants[i].getText()}")
         constants = ctx.VALOR_FLOAT()
         if constants:
             for i in range(0, len(constant_names)):
                 self.variablesTable[constant_names[i].getText()] = constants[i].getText()
-                print(f"\tCriando Constante-> {constant_names[i]} : {constants[i].getText()}")
+                #print(f"\tCriando Constante-> {constant_names[i]} : {constants[i].getText()}")
         constants = ctx.VALOR_STR()
         if constants:
             for i in range(0, len(constant_names)):
                 self.variablesTable[constant_names[i].getText()] = constants[i].getText()
-                print(f"\tCriando Constante-> {constant_names[i]} : {constants[i].getText()}")
+                #print(f"\tCriando Constante-> {constant_names[i]} : {constants[i].getText()}")
         constants = ctx.VALOR_BOOL()
         if constants:
             for i in range(0, len(constant_names)):
                 self.variablesTable[constant_names[i].getText()] = constants[i].getText()
-                print(f"\tCriando Constante-> {constant_names[i]} : {constants[i].getText()}")
+                #print(f"\tCriando Constante-> {constant_names[i]} : {constants[i].getText()}")
 
     # Visit a parse tree produced by javaSimplesParser#expressao.
     def visitExpressao(self, ctx: javaSimplesParser.ExpressaoContext):
-        print("realizando expressão...")
+        #print("realizando expressão...")
         temp_jasmin_code = ""
         tipo_expressao = None
         if ctx.expr_aritimetica():
@@ -345,7 +344,7 @@ end:\n\
 
     # Visit a parse tree produced by javaSimplesParser#expr_aritimetica.
     def visitExpr_aritimetica(self, ctx: javaSimplesParser.Expr_aritimeticaContext):
-        print("realizando expressão aritimetica...")
+        #print("realizando expressão aritimetica...")
         temp_jasmin_code = ""
         if ctx.expr_aritimetica() is not None and ctx.OPERADOR_ARIT_LVL_2() is not None:
             operador = ctx.OPERADOR_ARIT_LVL_2().getText()
@@ -356,7 +355,7 @@ end:\n\
                     # Adicionando o codigo jasmin do carregamento de operadores para o temp_jasmin_code
                     temp_jasmin_code += op_esq_jasmin_code
                     temp_jasmin_code += op_dir_jasmin_code
-                    temp_jasmin_code += "\tfmult\n"
+                    temp_jasmin_code += "\tfmul\n"
                     self.atualiza_pilha("pop")
                     return "float", temp_jasmin_code
                 elif tipo_operando_esq == "float":
@@ -364,7 +363,7 @@ end:\n\
                     # Adicionando o codigo jasmin do carregamento de operadores para o temp_jasmin_code
                     temp_jasmin_code += op_esq_jasmin_code
                     temp_jasmin_code += op_dir_jasmin_code
-                    temp_jasmin_code += "\tfmult\n"
+                    temp_jasmin_code += "\tfmul\n"
                     self.atualiza_pilha("pop")
                     return "float", temp_jasmin_code
                 elif tipo_operando_dir == "float":
@@ -372,14 +371,14 @@ end:\n\
                     # Adicionando o codigo jasmin do carregamento de operadores para o temp_jasmin_code
                     temp_jasmin_code += op_esq_jasmin_code
                     temp_jasmin_code += op_dir_jasmin_code
-                    temp_jasmin_code += "\tfmult\n"
+                    temp_jasmin_code += "\tfmul\n"
                     self.atualiza_pilha("pop")
                     return "float", temp_jasmin_code
                 else:
                     # Adicionando o codigo jasmin do carregamento de operadores para o temp_jasmin_code
                     temp_jasmin_code += op_esq_jasmin_code
                     temp_jasmin_code += op_dir_jasmin_code
-                    temp_jasmin_code += "\timult\n"
+                    temp_jasmin_code += "\timul\n"
                     self.atualiza_pilha("pop")
                     return "int", temp_jasmin_code
             else:
@@ -493,7 +492,7 @@ end:\n\
 
     # Visit a parse tree produced by javaSimplesParser#termo_aritimetico.
     def visitTermo_aritimetico(self, ctx: javaSimplesParser.Termo_aritimeticoContext):
-        print("carregando valor...")
+        #print("carregando valor...")
         temp_jasmin_code = ""
         if ctx.IDENTIFICADOR() is not None:
             identificador = ctx.IDENTIFICADOR().getText()
@@ -524,7 +523,7 @@ end:\n\
 
     # Visit a parse tree produced by javaSimplesParser#expr_relacional.
     def visitExpr_relacional(self, ctx: javaSimplesParser.Expr_relacionalContext):
-        print("realizando expressão relacional...")
+        #print("realizando expressão relacional...")
         temp_jasmin_code = ""
         if ctx.OPERADOR_RELACIONAL_LVL_2() is not None:
             operador = ctx.OPERADOR_RELACIONAL_LVL_2().getText()
@@ -587,7 +586,7 @@ end:\n\
 
     # Visit a parse tree produced by javaSimplesParser#termo_relacional.
     def visitTermo_relacional(self, ctx: javaSimplesParser.Termo_relacionalContext):
-        print("carregando valor booleano...")
+        #print("carregando valor booleano...")
         temp_jasmin_code = ""
 
         if ctx.IDENTIFICADOR() is not None:
@@ -673,7 +672,7 @@ end:\n\
 
     # Visit a parse tree produced by javaSimplesParser#comando_scanf.
     def visitComando_scanf(self, ctx: javaSimplesParser.Comando_scanfContext):
-        print("Carregando scanner...")
+        #print("Carregando scanner...")
         temp_jasmin_code = "; Comando scanf\n"
         for identificador in ctx.lista_de_var().IDENTIFICADOR():
             identificador = identificador.getText()
@@ -703,7 +702,7 @@ end:\n\
     # Visit a parse tree produced by javaSimplesParser#comando_atrib.
     def visitComando_atrib(self, ctx: javaSimplesParser.Comando_atribContext):
         temp_jasmin_code = "\t; Comando atrib\n"
-        print("Atribuindo valores...")
+        #print("Atribuindo valores...")
         identificador = ctx.IDENTIFICADOR()
         pos_na_memoria = self.variablesTable[identificador.getText()][0]
         tipo_da_variavel = self.variablesTable[identificador.getText()][1]
@@ -737,16 +736,14 @@ end:\n\
 
     # Visit a parse tree produced by javaSimplesParser#comando_print.
     def visitComando_print(self, ctx: javaSimplesParser.Comando_printContext):
-        # TODO: Verificar o identificador a ser impresso existe
         temp_jasmin_code = "\t; Comando print\n"
-        print("Criando print...")
+        #print("Criando print...")
 
         for expressao in ctx.lista_de_expressoes().expressao():
             tipo_da_expressao, codigo_da_expressao = self.visitExpressao(expressao)
             temp_jasmin_code += "\tgetstatic java/lang/System/out Ljava/io/PrintStream;\n"
             temp_jasmin_code += codigo_da_expressao
             temp_jasmin_code += "\tinvokevirtual java/io/PrintStream/println"
-            # print(f"codigo da expressao: {codigo_da_expressao}")
             if tipo_da_expressao == "int":
                 temp_jasmin_code += "(I)"  # Print recebe inteiro.
 
@@ -773,7 +770,6 @@ end:\n\
 
     # Visit a parse tree produced by javaSimplesParser#comando_return.
     def visitComando_return(self, ctx: javaSimplesParser.Comando_returnContext):
-        temp_jasmin_code = "\t; Comando return\n"
         tipo, temp_jasmin_code = self.visitExpressao(ctx.expressao())
         if tipo == "int":
             temp_jasmin_code += "\tireturn\n"
@@ -788,7 +784,7 @@ end:\n\
     # Visit a parse tree produced by javaSimplesParser#chamada_funcao.
     def visitChamada_funcao(self, ctx: javaSimplesParser.Chamada_funcaoContext):
         temp_jasmin_code = "; Comando funcao\n"
-        print("Preparando chamada de função...")
+        #print("Preparando chamada de função...")
         parametros = ""
         # carregando os parametros
         if ctx.lista_de_var():
@@ -817,8 +813,7 @@ end:\n\
                     else:
                         linha = ctx.start.line
                         raise Erro(
-                            f"Erro na linha {linha}: parametro recebido é do tipo {data_type},\
-                            era esperado tipo {tipo_do_parametro_esperado}")
+                            f"Erro na linha {linha}: parametro recebido é do tipo {data_type}, era esperado tipo {tipo_do_parametro_esperado}")
                 else:
                     linha = ctx.start.line
                     raise Erro(f"Erro na linha {linha}: variavel {variable_name} não declarada")
@@ -827,7 +822,7 @@ end:\n\
             expected_param_types = self.functionsTable[ctx.IDENTIFICADOR().getText()][1]
             for expressao, tipo_do_parametro_esperado in zip(expressoes, expected_param_types):
                 tipo, expr_code = self.visitExpressao(expressao)
-                print(tipo, tipo_do_parametro_esperado)
+                #print(tipo, tipo_do_parametro_esperado)
                 if tipo == tipo_do_parametro_esperado:
                     temp_jasmin_code += expr_code
                 if tipo == "int":
@@ -841,18 +836,17 @@ end:\n\
                 else:
                     linha = ctx.start.line
                     raise Erro(
-                        f"Erro na linha {linha}: parametro recebido é do tipo {tipo},\
-                         era esperado tipo {tipo_do_parametro_esperado}")
+                        f"Erro na linha {linha}: parametro recebido é do tipo {tipo},era esperado tipo {tipo_do_parametro_esperado}")
         # Chamando a função em si
         tipo_de_retorno = self.functionsTable[ctx.IDENTIFICADOR().getText()][0]
-        print()
         if tipo_de_retorno == "int":
             temp_jasmin_code += f"\tinvokestatic {self.nome_do_programa.split('.')[0]}/{ctx.IDENTIFICADOR().getText()}({parametros})I\n"
         elif tipo_de_retorno == "float":
             temp_jasmin_code += f"\tinvokestatic {self.nome_do_programa.split('.')[0]}/{ctx.IDENTIFICADOR().getText()}({parametros})F\n"
         elif tipo_de_retorno == "\tstr":
             temp_jasmin_code += f"\tinvokestatic {self.nome_do_programa.split('.')[0]}/{ctx.IDENTIFICADOR().getText()}({parametros})Ljava/lang/String\n"
-        else:
+        elif tipo_de_retorno == "bool":
             temp_jasmin_code += f"\tinvokestatic {self.nome_do_programa.split('.')[0]}/{ctx.IDENTIFICADOR().getText()}({parametros})I\n"
-
+        else:
+            temp_jasmin_code += f"\tinvokestatic {self.nome_do_programa.split('.')[0]}/{ctx.IDENTIFICADOR().getText()}({parametros})V\n"
         return temp_jasmin_code

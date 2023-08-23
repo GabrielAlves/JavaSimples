@@ -98,13 +98,16 @@ class GUIApp:
         try:
             self.save_file()
             analisador = Visitor(self.file_path)
+            print("Compilando o codigo...")
             analisador.executar()
-            print("Criando arquivo jar...")
+            print("Gerando Jasmin...")
             jasmin_file_path = analisador.save_jasmin_code()
+            print("Criando arquivo jar...")
             comando = f"java -jar jasmin.jar {jasmin_file_path}"
             saida = subprocess.check_output(comando, shell=True, universal_newlines=True)
             print(saida)
             print("Codigo Compilado com sucesso!")
+            print(f"Salvo como {jasmin_file_path[:-2]}.class")
         except Exception as e:
             result = f"{str(e)}"
             self.output_text.insert(tk.END, result)
