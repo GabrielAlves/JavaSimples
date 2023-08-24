@@ -1,7 +1,7 @@
 .class public funcao_prof
 .super java/lang/Object
 
-.method public static fatorial(I)I
+.method public static fatorial(I)F
 	.limit stack 5
 	.limit locals 1
 ; Comando if
@@ -13,13 +13,14 @@
 	iload 0
 	invokevirtual java/io/PrintStream/println(I)V
 	iload 0
+	i2f
 ; Comando funcao
 	iload 0
 	ldc 1
 	isub
-	invokestatic funcao_prof/fatorial(I)I
-	imul
-	ireturn
+	invokestatic funcao_prof/fatorial(I)F
+	fmul
+	freturn
 	goto loop1
 loop0:
 	ldc 1
@@ -126,7 +127,7 @@ end:
 
 
 .method public static main([Ljava/lang/String;)V
-	.limit stack 3
+	.limit stack 4
 	.limit locals 3
 	; inicio das declaracoes
 	ldc 0
@@ -136,19 +137,6 @@ end:
 	ldc 0
 	istore 2
 	; fim das declaracoes
-	; Comando print
-	getstatic java/lang/System/out Ljava/io/PrintStream;
-	ldc "Programa Fatorial. Digite o valor?"
-	invokevirtual java/io/PrintStream/println(Ljava/lang/String;)V
-; Comando scanf
-	invokestatic funcao_prof/lerInteiro()I
-	istore 0
-	; Comando print
-	getstatic java/lang/System/out Ljava/io/PrintStream;
-; Comando funcao
-	iload 0
-	invokestatic funcao_prof/fatorial(I)I
-	invokevirtual java/io/PrintStream/println(I)V
 	; Comando print
 	getstatic java/lang/System/out Ljava/io/PrintStream;
 	ldc "Programa Media. Digite o valores?"
@@ -162,5 +150,8 @@ end:
 	iload 1
 	iload 2
 	invokestatic funcao_prof/mostrarMedia(II)V
+; Comando funcao
+	iload 1
+	invokestatic funcao_prof/fatorial(I)F
 	return
 .end method

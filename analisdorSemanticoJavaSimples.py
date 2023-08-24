@@ -280,7 +280,7 @@ end:\n\
         for variable_name in variable_names:
             if variable_name.getText() in self.variablesTable:
                 linha = ctx.start.line
-                raise Erro(f"Erro na linha {linha}, variavel já declarada")
+                raise Erro(f"Erro na linha {linha}, variavel {variable_name} já declarada")
             else:
                 self.variablesTable[variable_name.getText()] = (len(self.variablesTable), data_type)
                 if data_type == "int":
@@ -588,7 +588,6 @@ end:\n\
     def visitTermo_relacional(self, ctx: javaSimplesParser.Termo_relacionalContext):
         #print("carregando valor booleano...")
         temp_jasmin_code = ""
-
         if ctx.IDENTIFICADOR() is not None:
             identificador = ctx.IDENTIFICADOR().getText()
             variavel, tipo = self.variablesTable[identificador]
@@ -704,6 +703,12 @@ end:\n\
         temp_jasmin_code = "\t; Comando atrib\n"
         #print("Atribuindo valores...")
         identificador = ctx.IDENTIFICADOR()
+
+
+        if identificador.getText() not in self.variablesTable:
+            linha = ctx.start.line
+            raise Erro(f"Erro: na linha: {linha}. O identificador \"{identificador}\" não existe")
+
         pos_na_memoria = self.variablesTable[identificador.getText()][0]
         tipo_da_variavel = self.variablesTable[identificador.getText()][1]
         tipo_da_expressao, codigo_da_expr = self.visitExpressao(ctx.expressao())

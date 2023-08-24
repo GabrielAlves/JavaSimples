@@ -11,6 +11,7 @@
 	istore 0
 	iload 0
 	ireturn
+	return
 .end method
 
 .method public static lerInteiro()I

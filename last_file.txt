@@ -1,1 +1,1 @@
-C:/Users/Windows_PC/Desktop/Arquivos/Estudos/1 - UFPI/6º Periodo/Compiladores/Projeto_Final_Compiladores/JavaSimples/testes_entrada/testes.txt
+C:/Users/Gabriel/Music/JavaSimples/testes_entrada/funcao_prof.txt

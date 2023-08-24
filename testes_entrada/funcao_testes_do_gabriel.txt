@@ -1,6 +1,6 @@
 main:
     var:
        a : int;
-       b : int
+       b : int;
     scanf(a, b);
 end

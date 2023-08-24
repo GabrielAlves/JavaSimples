@@ -1,4 +1,4 @@
-fatorial (int fat) : int
+fatorial (int fat) : float
 if (fat > 1):
 print (fat);
 return fat * fatorial(fat - 1);
@@ -12,6 +12,7 @@ x : float;
 y : int;
 x = (v1+v2)/2;
 print ("Resultado: ", x);
+
 end
 media (float n1, float n2) : float
 var:
@@ -22,14 +23,24 @@ end
 main:
 var:
 numero : int;
-n1, n2 : int;
-print ("Programa Fatorial. Digite o valor?");
-scanf(numero);
-print(fatorial(numero));
+n1 : int;
+n2 : int;
 print ("Programa Media. Digite o valores?");
 scanf(n1, n2);
 mostrarMedia(n1, n2);
+fatorial(n1);
 end
+
+
+
+
+
+
+
+
+
+
+
 
 
 
